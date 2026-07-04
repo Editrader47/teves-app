@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teves - TV Gratis (Plex + Pluto)</title>
+    <style>
+        /* --- ESTILOS LIGEROS PARA QUE FUNCIONE RÁPIDO EN SMART TV --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #111;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e50914;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-icon {
+            background: #e50914;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: #fff;
+        }
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .logo h1 span {
+            color: #e50914;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .controls select {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            max-width: 140px;
+        }
+        .badge {
+            background: #e50914;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-text {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            min-width: 250px;
+            background: #0d0d14;
+            border-right: 1px solid #222;
+            overflow-y: auto;
+            padding: 8px 0;
+            flex-shrink: 0;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .channel-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background 0.1s;
+        }
+        .channel-item:hover,
+        .channel-item.active {
+            background: #1a1a2a;
+            border-left-color: #e50914;
+        }
+        .channel-item img {
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            object-fit: cover;
+            background: #222;
+            flex-shrink: 0;
+        }
+        .channel-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .channel-item .info .name {
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .channel-item .info .cat {
+            font-size: 9px;
+            color: #666;
+        }
+        .channel-item .live {
+            background: #e50914;
+            font-size: 7px;
+            padding: 1px 5px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .load-more-btn {
+            background: #1a1a2e;
+            color: #aaa;
+            border: 1px solid #333;
+            padding: 8px;
+            margin: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+        .load-more-btn:hover {
+            background: #2a2a3e;
+            color: #fff;
+        }
+
+        .player-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+        .player-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            min-height: 180px;
+            position: relative;
+        }
+        .player-wrapper video,
+        .player-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            max-height: 70vh;
+            border: none;
+            background: #000;
+        }
+        .placeholder {
+            text-align: center;
+            color: #444;
+            padding: 15px;
+        }
+        .placeholder .icon {
+            font-size: 40px;
+            opacity: 0.3;
+        }
+        .placeholder h2 {
+            font-size: 16px;
+            font-weight: 300;
+        }
+        .placeholder p {
+            font-size: 12px;
+            color: #555;
+        }
+
+        .now-playing {
+            background: #111;
+            padding: 6px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #222;
+            flex-wrap: wrap;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .now-playing .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .now-playing .left img {
+            width: 28px;
+            height: 28px;
+            border-radius: 3px;
+            object-fit: cover;
+            background: #222;
+        }
+        .now-playing .left .name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .now-playing .left .cat {
+            font-size: 11px;
+            color: #888;
+        }
+        .now-playing .status {
+            font-size: 10px;
+            color: #4caf50;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .now-playing .status .dot {
+            width: 6px;
+            height: 6px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                width: 180px;
+                min-width: 180px;
+            }
+            .logo h1 {
+                font-size: 16px;
+            }
+            .controls select {
+                max-width: 100px;
+                font-size: 10px;
+            }
+        }
+        @media (max-width: 500px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                max-height: 150px;
+                border-right: none;
+                border-bottom: 1px solid #222;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">T</div>
+            <h1>Te<span>ves</span></h1>
+        </div>
+        <div class="controls">
+            <span class="status-text" id="channelCount">Cargando...</span>
+            <select id="sourceSelector">
+                <option value="pluto">📡 Pluto TV</option>
+                <option value="freetv">🎬 Free-TV (Plex + Otros)</option>
+                <option value="plex" selected>🎥 SOLO PLEX</option>
+                <option value="iptvorg">🌍 IPTV-Org (40k+)</option>
+            </select>
+            <span class="badge">GRATIS</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <div style="padding:20px;color:#555;text-align:center;font-size:12px;">
+                Selecciona una fuente arriba
+            </div>
+        </aside>
+
+        <main class="player-area">
+            <div class="player-wrapper" id="playerWrapper">
+                <div class="placeholder" id="placeholder">
+                    <div class="icon">📺</div>
+                    <h2>Bienvenido a Teves</h2>
+                    <p>Elige un canal de la lista</p>
+                </div>
+                <video id="videoPlayer" style="display:none;" controls autoplay playsinline></video>
+                <iframe id="iframePlayer" style="display:none;" allowfullscreen></iframe>
+            </div>
+
+            <div class="now-playing" id="nowPlaying">
+                <div class="left">
+                    <img id="nowLogo" src="" alt="" />
+                    <div>
+                        <div class="name" id="nowName">Sin canal</div>
+                        <div class="cat" id="nowCat">Selecciona uno</div>
+                    </div>
+                </div>
+                <div class="status">
+                    <span class="dot"></span>
+                    <span>EN VIVO</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ============================================================
+        //  TEVES - CON PLEX, PLUTO Y MÁS (OPTIMIZADO PARA SMART TV)
+        // ============================================================
+
+        const CONFIG = {
+            region: 'mx',
+            itemsPerPage: 70 // Carga de 70 en 70 para no trabar la tele
+        };
+
+        let allChannels = [];
+        let currentPage = 0;
+        let currentChannel = null;
+        let currentSource = 'plex';
+        let isLoading = false;
+
+        const sidebar = document.getElementById('sidebar');
+        const sourceSelector = document.getElementById('sourceSelector');
+        const channelCount = document.getElementById('channelCount');
+        const placeholder = document.getElementById('placeholder');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const iframePlayer = document.getElementById('iframePlayer');
+        const nowLogo = document.getElementById('nowLogo');
+        const nowName = document.getElementById('nowName');
+        const nowCat = document.getElementById('nowCat');
+
+        // --- DEFINICIÓN DE FUENTES (TODAS LEGALES) ---
+        const SOURCES = {
+            pluto: {
+                name: 'Pluto TV',
+                type: 'api',
+                url: `https://api.pluto.tv/v2/channels?regionCode=${CONFIG.region}`
+            },
+            freetv: {
+                name: 'Free-TV (Plex, Pluto, Roku, Samsung)',
+                type: 'm3u',
+                url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8'
+            },
+            plex: {
+                name: 'SOLO PLEX',
+                type: 'm3u',
+                url: 'https://iptv-org.github.io/iptv/index.m3u',
+                filter: 'plex' // <--- Aquí filtramos para que solo salgan canales de PLEX
+            },
+            iptvorg: {
+                name: 'IPTV-Org (Mundo entero)',
+                type: 'm3u',
+                url: 'https://iptv-org.github.io/iptv/index.m3u'
+            }
+        };
+
+        // --- GUARDAR EN CACHÉ (para que cargue más rápido la próxima vez) ---
+        function saveCache(key, data) {
+            try { localStorage.setItem('teves_' + key, JSON.stringify(data)); } catch (e) {}
+        }
+
+        function getCache(key) {
+            try {
+                const data = localStorage.getItem('teves_' + key);
+                return data ? JSON.parse(data) : null;
+            } catch (e) { return null; }
+        }
+
+        // --- CARGAR CANALES SEGÚN LA FUENTE ELEGIDA ---
+        async function loadSource(sourceKey) {
+            if (isLoading) return;
+            isLoading = true;
+            currentSource = sourceKey;
+            const source = SOURCES[sourceKey];
+            if (!source) return;
+
+            channelCount.textContent = 'Descargando...';
+            sidebar.innerHTML =
+                `<div style="padding:30px;text-align:center;color:#555;">⏳ Cargando ${source.name}<br><span style="font-size:10px;">(Puede tardar unos segundos)</span></div>`;
+
+            // Intentar cargar desde caché
+            const cacheKey = `channels_${sourceKey}`;
+            let channels = getCache(cacheKey);
+
+            if (!channels) {
+                try {
+                    const response = await fetch(source.url);
+                    if (!response.ok) throw new Error('Error de red');
+                    const data = await response.text();
+
+                    if (source.type === 'api') {
+                        channels = parsePlutoApi(data);
+                    } else {
+                        channels = parseM3U(data);
+                    }
+
+                    // Si la fuente es "plex", filtramos solo los que tengan "plex" en el nombre
+                    if (sourceKey === 'plex') {
+                        channels = channels.filter(c => c.name.toLowerCase().includes('plex'));
+                    }
+
+                    // Guardar en caché
+                    saveCache(cacheKey, channels);
+                } catch (error) {
+                    console.error(error);
+                    sidebar.innerHTML = `
+                        <div style="padding:30px;text-align:center;color:#e50914;">
+                            ❌ Error al cargar<br>
+                            <span style="font-size:11px;color:#666;">${error.message}</span>
+                            <button onclick="location.reload()" style="margin-top:12px;padding:5px 16px;background:#e50914;border:none;color:#fff;border-radius:4px;cursor:pointer;">Reintentar</button>
+                        </div>
+                    `;
+                    channelCount.textContent = 'Error';
+                    isLoading = false;
+                    return;
+                }
+            } else {
+                console.log('Cargado desde caché local');
+            }
+
+            allChannels = channels;
+            currentPage = 0;
+            channelCount.textContent = `${allChannels.length} canales`;
+            renderChannels();
+            isLoading = false;
+        }
+
+        // --- PARSEAR PLUTO TV (API JSON) ---
+        function parsePlutoApi(jsonText) {
+            try {
+                const data = JSON.parse(jsonText);
+                return data.map(ch => {
+                    let logo = ch.image?.small || ch.logo?.small || ch.image?.path || 'https://pluto.tv/assets/logo-pluto.png';
+                    let liveUrl = ch.liveUrl || ch.url || '';
+                    if (!liveUrl && ch.channelStations) {
+                        const st = ch.channelStations.find(s => s.deviceType === 'web');
+                        if (st?.path) liveUrl =
+                            `https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/${st.path}/master.m3u8?deviceId=web&deviceModel=web&deviceVersion=1.0&appVersion=1.0&deviceType=web&deviceMake=web&deviceDNT=0`;
+                    }
+                    if (!liveUrl) return null;
+                    return {
+                        id: ch.id || `p_${Math.random()}`,
+                        name: ch.name || 'Sin nombre',
+                        logo: logo,
+                        category: ch.genre || 'General',
+                        liveUrl: liveUrl
+                    };
+                }).filter(c => c !== null);
+            } catch (e) { return []; }
+        }
+
+        // --- PARSEAR LISTA M3U (TEXTO) ---
+        function parseM3U(text) {
+            const lines = text.split('\n');
+            const channels = [];
+            let current = null;
+
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('#EXTINF:')) {
+                    // Extraer nombre y logo
+                    let name = 'Canal sin nombre';
+                    let logo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png';
+                    let category = 'General';
+
+                    // Buscar tvg-logo
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    if (logoMatch) logo = logoMatch[1];
+
+                    // Buscar group-title (categoría)
+                    const groupMatch = line.match(/group-title="([^"]*)"/);
+                    if (groupMatch) category = groupMatch[1];
+
+                    // El nombre está después de la última coma
+                    const parts = line.split(',');
+                    if (parts.length > 1) {
+                        name = parts[parts.length - 1].trim();
+                    }
+
+                    current = { name, logo, category, liveUrl: '' };
+                } else if (line && !line.startsWith('#') && current) {
+                    // Esta línea es la URL del stream
+                    if (line.startsWith('http://') || line.startsWith('https://')) {
+                        current.liveUrl = line;
+                        // Limpiar nombre si está muy largo
+                        if (current.name.length > 60) current.name = current.name.substring(0, 57) + '...';
+                        channels.push(current);
+                        current = null;
+                    }
+                }
+            }
+            return channels;
+        }
+
+        // --- RENDERIZAR CANALES EN LA BARRA LATERAL (SOLO 70 DE GOLPE) ---
+        function renderChannels() {
+            const start = currentPage * CONFIG.itemsPerPage;
+            const end = start + CONFIG.itemsPerPage;
+            const pageChannels = allChannels.slice(start, end);
+
+            if (pageChannels.length === 0 && currentPage === 0) {
+                sidebar.innerHTML =
+                    `<div style="padding:30px;text-align:center;color:#555;">📭 No se encontraron canales<br><span style="font-size:11px;">Prueba otra fuente</span></div>`;
+                return;
+            }
+
+            let html = '';
+            pageChannels.forEach(ch => {
+                const isActive = (currentChannel && currentChannel.id === ch.id) ? 'active' : '';
+                html += `
+                    <div class="channel-item ${isActive}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
+                        <img src="${ch.logo}" alt="${ch.name}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
+                        <div class="info">
+                            <div class="name">${ch.name}</div>
+                            <div class="cat">${ch.category}</div>
+                        </div>
+                        <span class="live">Live</span>
+                    </div>
+                `;
+            });
+
+            // Si hay más canales por cargar, añadir botón "Cargar más"
+            if (end < allChannels.length) {
+                html += `<div class="load-more-btn" id="loadMoreBtn">⬇️ Cargar más canales (${allChannels.length - end} restantes)</div>`;
+            }
+
+            sidebar.innerHTML = html;
+
+            // Eventos de clic
+            document.querySelectorAll('.channel-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    try {
+                        const ch = JSON.parse(this.dataset.channel);
+                        playChannel(ch);
+                    } catch (e) { console.warn('Error al reproducir'); }
+                });
+            });
+
+            // Evento del botón "Cargar más"
+            const loadBtn = document.getElementById('loadMoreBtn');
+            if (loadBtn) {
+                loadBtn.addEventListener('click', () => {
+                    currentPage++;
+                    renderChannels();
+                    // Hacer scroll para ver los nuevos
+                    sidebar.scrollTop = sidebar.scrollHeight * 0.7;
+                });
+            }
+
+            // Si ya había un canal seleccionado, mantenerlo resaltado
+            if (currentChannel) {
+                document.querySelectorAll('.channel-item').forEach(el => {
+                    try {
+                        const ch = JSON.parse(el.dataset.channel);
+                        if (ch.id === currentChannel.id) el.classList.add('active');
+                    } catch (e) {}
+                });
+            }
+        }
+
+        // --- REPRODUCIR CANAL ---
+        function playChannel(channel) {
+            if (!channel || !channel.liveUrl) {
+                console.warn('Canal sin URL válida');
+                return;
+            }
+
+            currentChannel = channel;
+            placeholder.style.display = 'none';
+
+            const url = channel.liveUrl;
+
+            // Decidir si usar video o iframe
+            if (url.includes('.m3u8') || url.includes('pluto.tv') || url.includes('akamaized')) {
+                videoPlayer.style.display = 'block';
+                iframePlayer.style.display = 'none';
+
+                if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoPlayer.src = url;
+                } else {
+                    loadHLS(url);
+                }
+                videoPlayer.play().catch(e => console.warn('Auto-play bloqueado'));
+            } else if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+                videoPlayer.style.display = 'none';
+                iframePlayer.style.display = 'block';
+                iframePlayer.src = url;
+            } else {
+                // Intentar con video directo
+                videoPlayer.style.display = 'block';
+                iframePlayer.style.display = 'none';
+                videoPlayer.src = url;
+                videoPlayer.play().catch(e => console.warn('Auto-play bloqueado'));
+            }
+
+            // Actualizar barra de "Ahora suena"
+            nowLogo.src = channel.logo || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png';
+            nowName.textContent = channel.name || 'Canal sin nombre';
+            nowCat.textContent = channel.category || 'General';
+
+            // Resaltar en sidebar
+            document.querySelectorAll('.channel-item').forEach(el => {
+                el.classList.remove('active');
+                try {
+                    const ch = JSON.parse(el.dataset.channel);
+                    if (ch.id === channel.id) el.classList.add('active');
+                } catch (e) {}
+            });
+        }
+
+        // --- CARGAR HLS.JS (para reproducir .m3u8 en navegadores que no lo soporten nativamente) ---
+        function loadHLS(url) {
+            if (typeof Hls !== 'undefined') {
+                const hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(videoPlayer);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+            script.onload = () => {
+                const hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(videoPlayer);
+            };
+            document.head.appendChild(script);
+        }
+
+        // --- EVENTO: Cambiar de fuente en el desplegable ---
+        sourceSelector.addEventListener('change', function() {
+            loadSource(this.value);
+        });
+
+        // --- INICIAR ---
+        // Cargar la fuente "PLEX" por defecto (porque te gusta)
+        sourceSelector.value = 'plex';
+        loadSource('plex');
+
+        // Exponer funciones útiles para la consola (por si quieres probar)
+        window.Teves = {
+            loadSource: loadSource,
+            playChannel: playChannel,
+            channels: () => allChannels
+        };
+
+        console.log('📺 Teves cargado con PLEX incluido');
+        console.log('💡 Cambia de fuente en el menú desplegable');
+    </script>
+</body>
+</html>
