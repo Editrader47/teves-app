@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teves - TV Gratis (PLEX + Free-TV)</title>
+    <title>Teves - TV Gratis en Español</title>
     <style>
         * {
             margin: 0;
@@ -21,13 +21,13 @@
         }
         .header {
             background: #111;
-            padding: 10px 16px;
+            padding: 8px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #e50914;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             flex-shrink: 0;
         }
         .logo {
@@ -37,18 +37,18 @@
         }
         .logo-icon {
             background: #e50914;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             color: #fff;
         }
         .logo h1 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
         }
         .logo h1 span {
@@ -57,44 +57,44 @@
         .controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
         .controls select {
             background: #222;
             color: #fff;
             border: 1px solid #444;
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
-            max-width: 160px;
+            max-width: 130px;
         }
         .badge {
             background: #e50914;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 8px;
             font-weight: 600;
             text-transform: uppercase;
         }
         .status-text {
-            font-size: 11px;
+            font-size: 10px;
             color: #aaa;
         }
         .container {
             display: flex;
             flex: 1;
-            height: calc(100vh - 65px);
+            height: calc(100vh - 58px);
             overflow: hidden;
         }
         .sidebar {
-            width: 250px;
-            min-width: 250px;
+            width: 220px;
+            min-width: 220px;
             background: #0d0d14;
             border-right: 1px solid #222;
             overflow-y: auto;
-            padding: 8px 0;
+            padding: 6px 0;
             flex-shrink: 0;
         }
         .sidebar::-webkit-scrollbar {
@@ -107,8 +107,8 @@
         .channel-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
+            gap: 6px;
+            padding: 5px 10px;
             cursor: pointer;
             border-left: 3px solid transparent;
             transition: background 0.1s;
@@ -119,8 +119,8 @@
             border-left-color: #e50914;
         }
         .channel-item img {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 3px;
             object-fit: cover;
             background: #222;
@@ -131,21 +131,21 @@
             min-width: 0;
         }
         .channel-item .info .name {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .channel-item .info .cat {
-            font-size: 9px;
+            font-size: 8px;
             color: #666;
         }
         .channel-item .live {
             background: #e50914;
-            font-size: 7px;
-            padding: 1px 5px;
-            border-radius: 6px;
+            font-size: 6px;
+            padding: 1px 4px;
+            border-radius: 4px;
             font-weight: 700;
             text-transform: uppercase;
         }
@@ -153,11 +153,11 @@
             background: #1a1a2e;
             color: #aaa;
             border: 1px solid #333;
-            padding: 8px;
-            margin: 8px 12px;
+            padding: 6px;
+            margin: 6px 10px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             text-align: center;
         }
         .load-more-btn:hover {
@@ -176,7 +176,7 @@
             align-items: center;
             justify-content: center;
             background: #000;
-            min-height: 180px;
+            min-height: 160px;
             position: relative;
         }
         .player-wrapper video,
@@ -190,76 +190,76 @@
         .placeholder {
             text-align: center;
             color: #444;
-            padding: 15px;
+            padding: 12px;
         }
         .placeholder .icon {
-            font-size: 40px;
+            font-size: 35px;
             opacity: 0.3;
         }
         .placeholder h2 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 300;
         }
         .placeholder p {
-            font-size: 12px;
+            font-size: 11px;
             color: #555;
         }
         .now-playing {
             background: #111;
-            padding: 6px 16px;
+            padding: 5px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid #222;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 4px;
             flex-shrink: 0;
         }
         .now-playing .left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .now-playing .left img {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 3px;
             object-fit: cover;
             background: #222;
         }
         .now-playing .left .name {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 12px;
         }
         .now-playing .left .cat {
-            font-size: 11px;
+            font-size: 10px;
             color: #888;
         }
         .now-playing .status {
-            font-size: 10px;
+            font-size: 9px;
             color: #4caf50;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
         .now-playing .status .dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             background: #4caf50;
             border-radius: 50%;
             display: inline-block;
         }
         @media (max-width: 700px) {
             .sidebar {
-                width: 180px;
-                min-width: 180px;
+                width: 160px;
+                min-width: 160px;
             }
             .logo h1 {
-                font-size: 16px;
+                font-size: 15px;
             }
             .controls select {
-                max-width: 120px;
-                font-size: 10px;
+                max-width: 100px;
+                font-size: 9px;
             }
         }
         @media (max-width: 500px) {
@@ -269,7 +269,7 @@
             .sidebar {
                 width: 100%;
                 min-width: unset;
-                max-height: 150px;
+                max-height: 140px;
                 border-right: none;
                 border-bottom: 1px solid #222;
             }
@@ -286,18 +286,33 @@
         <div class="controls">
             <span class="status-text" id="channelCount">Cargando...</span>
             <select id="sourceSelector">
-                <option value="freetv">🎬 Free-TV (Plex, Pluto, Roku, Samsung)</option>
-                <option value="iptvorg" selected>🌍 SOLO PLEX (filtrado)</option>
-                <option value="iptvorg_all">🌍 IPTV-Org (todos los canales)</option>
+                <option value="es">🇪🇸 España</option>
+                <option value="mx" selected>🇲🇽 México</option>
+                <option value="co">🇨🇴 Colombia</option>
+                <option value="ar">🇦🇷 Argentina</option>
+                <option value="pe">🇵🇪 Perú</option>
+                <option value="cl">🇨🇱 Chile</option>
+                <option value="ve">🇻🇪 Venezuela</option>
+                <option value="ec">🇪🇨 Ecuador</option>
+                <option value="gt">🇬🇹 Guatemala</option>
+                <option value="bo">🇧🇴 Bolivia</option>
+                <option value="cr">🇨🇷 Costa Rica</option>
+                <option value="do">🇩🇴 República Dominicana</option>
+                <option value="pa">🇵🇦 Panamá</option>
+                <option value="uy">🇺🇾 Uruguay</option>
+                <option value="py">🇵🇾 Paraguay</option>
+                <option value="ni">🇳🇮 Nicaragua</option>
+                <option value="hn">🇭🇳 Honduras</option>
+                <option value="sv">🇸🇻 El Salvador</option>
             </select>
-            <span class="badge">GRATIS</span>
+            <span class="badge">ESPAÑOL</span>
         </div>
     </header>
 
     <div class="container">
         <aside class="sidebar" id="sidebar">
-            <div style="padding:20px;color:#555;text-align:center;font-size:12px;">
-                Cargando canales...
+            <div style="padding:15px;color:#555;text-align:center;font-size:11px;">
+                Selecciona un país arriba
             </div>
         </aside>
 
@@ -305,7 +320,7 @@
             <div class="player-wrapper" id="playerWrapper">
                 <div class="placeholder" id="placeholder">
                     <div class="icon">📺</div>
-                    <h2>Bienvenido a Teves</h2>
+                    <h2>Teves en Español</h2>
                     <p>Elige un canal de la lista</p>
                 </div>
                 <video id="videoPlayer" style="display:none;" controls autoplay playsinline></video>
@@ -330,12 +345,12 @@
 
     <script>
         // ============================================================
-        // TEVES - VERSIÓN SIN PLUTO (EVITA ERROR CORS)
-        // Fuentes: Free-TV y IPTV-Org (con filtro PLEX)
+        // TEVES - VERSIÓN ESPAÑOL (RÁPIDA Y FILTRADA POR PAÍS)
+        // Usa listas de IPTV-Org por país (300-800 canales cada una)
         // ============================================================
 
         const CONFIG = {
-            itemsPerPage: 60 // carga de 60 en 60 para Smart TV
+            itemsPerPage: 50
         };
 
         let allChannels = [];
@@ -353,27 +368,12 @@
         const nowName = document.getElementById('nowName');
         const nowCat = document.getElementById('nowCat');
 
-        // --- DEFINICIÓN DE FUENTES (todas legales y sin CORS) ---
-        const SOURCES = {
-            freetv: {
-                name: 'Free-TV (Plex, Pluto, Roku, Samsung)',
-                type: 'm3u',
-                url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8'
-            },
-            iptvorg: {
-                name: 'SOLO PLEX (filtrado)',
-                type: 'm3u',
-                url: 'https://iptv-org.github.io/iptv/index.m3u',
-                filter: 'plex'
-            },
-            iptvorg_all: {
-                name: 'IPTV-Org (todos los canales)',
-                type: 'm3u',
-                url: 'https://iptv-org.github.io/iptv/index.m3u'
-            }
-        };
+        // --- LISTAS POR PAÍS (todas de IPTV-Org, legales) ---
+        function getCountryUrl(countryCode) {
+            return `https://iptv-org.github.io/iptv/countries/${countryCode}.m3u`;
+        }
 
-        // --- CACHÉ LOCAL ---
+        // --- CACHÉ ---
         function saveCache(key, data) {
             try { localStorage.setItem('teves_' + key, JSON.stringify(data)); } catch (e) {}
         }
@@ -385,41 +385,55 @@
             } catch (e) { return null; }
         }
 
-        // --- CARGAR CANALES ---
-        async function loadSource(sourceKey) {
+        // --- CARGAR CANALES POR PAÍS ---
+        async function loadCountry(countryCode) {
             if (isLoading) return;
             isLoading = true;
-            const source = SOURCES[sourceKey];
-            if (!source) return;
 
+            const countryNames = {
+                es: 'España',
+                mx: 'México',
+                co: 'Colombia',
+                ar: 'Argentina',
+                pe: 'Perú',
+                cl: 'Chile',
+                ve: 'Venezuela',
+                ec: 'Ecuador',
+                gt: 'Guatemala',
+                bo: 'Bolivia',
+                cr: 'Costa Rica',
+                do: 'República Dominicana',
+                pa: 'Panamá',
+                uy: 'Uruguay',
+                py: 'Paraguay',
+                ni: 'Nicaragua',
+                hn: 'Honduras',
+                sv: 'El Salvador'
+            };
+
+            const countryName = countryNames[countryCode] || countryCode.toUpperCase();
             channelCount.textContent = 'Descargando...';
             sidebar.innerHTML =
-                `<div style="padding:30px;text-align:center;color:#555;">⏳ Cargando ${source.name}<br><span style="font-size:10px;">(puede tardar unos segundos)</span></div>`;
+                `<div style="padding:20px;text-align:center;color:#555;">⏳ Cargando ${countryName}<br><span style="font-size:10px;">(solo canales en español)</span></div>`;
 
-            // Intentar desde caché
-            const cacheKey = `channels_${sourceKey}`;
+            const cacheKey = `channels_${countryCode}`;
             let channels = getCache(cacheKey);
 
             if (!channels) {
                 try {
-                    const response = await fetch(source.url);
-                    if (!response.ok) throw new Error('Error de red');
+                    const url = getCountryUrl(countryCode);
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Error al descargar la lista');
                     const data = await response.text();
                     channels = parseM3U(data);
-
-                    // Aplicar filtro si existe
-                    if (source.filter === 'plex') {
-                        channels = channels.filter(c => c.name.toLowerCase().includes('plex'));
-                    }
-
                     saveCache(cacheKey, channels);
                 } catch (error) {
                     console.error(error);
                     sidebar.innerHTML = `
-                        <div style="padding:30px;text-align:center;color:#e50914;">
-                            ❌ Error al cargar<br>
-                            <span style="font-size:11px;color:#666;">${error.message}</span>
-                            <button onclick="location.reload()" style="margin-top:12px;padding:5px 16px;background:#e50914;border:none;color:#fff;border-radius:4px;cursor:pointer;">Reintentar</button>
+                        <div style="padding:20px;text-align:center;color:#e50914;font-size:13px;">
+                            ❌ Error al cargar ${countryName}<br>
+                            <span style="font-size:10px;color:#666;">${error.message}</span>
+                            <button onclick="location.reload()" style="margin-top:10px;padding:4px 14px;background:#e50914;border:none;color:#fff;border-radius:4px;cursor:pointer;font-size:12px;">Reintentar</button>
                         </div>
                     `;
                     channelCount.textContent = 'Error';
@@ -427,7 +441,7 @@
                     return;
                 }
             } else {
-                console.log('Cargado desde caché local');
+                console.log(`✅ Cargado ${countryName} desde caché (${channels.length} canales)`);
             }
 
             allChannels = channels;
@@ -437,7 +451,7 @@
             isLoading = false;
         }
 
-        // --- PARSEAR M3U ---
+        // --- PARSEAR M3U (sencillo y rápido) ---
         function parseM3U(text) {
             const lines = text.split('\n');
             const channels = [];
@@ -460,7 +474,7 @@
                     if (parts.length > 1) {
                         name = parts[parts.length - 1].trim();
                     }
-                    if (name.length > 60) name = name.substring(0, 57) + '...';
+                    if (name.length > 50) name = name.substring(0, 47) + '...';
 
                     current = { name, logo, category, liveUrl: '' };
                 } else if (line && !line.startsWith('#') && current) {
@@ -482,12 +496,14 @@
 
             if (pageChannels.length === 0 && currentPage === 0) {
                 sidebar.innerHTML =
-                    `<div style="padding:30px;text-align:center;color:#555;">📭 No se encontraron canales<br><span style="font-size:11px;">Prueba otra fuente</span></div>`;
+                    `<div style="padding:20px;text-align:center;color:#555;font-size:12px;">📭 No se encontraron canales<br><span style="font-size:10px;">Prueba otro país</span></div>`;
                 return;
             }
 
             let html = '';
             pageChannels.forEach(ch => {
+                // Generar un ID único
+                if (!ch.id) ch.id = 'ch_' + Math.random().toString(36).substr(2, 6);
                 const isActive = (currentChannel && currentChannel.id === ch.id) ? 'active' : '';
                 html += `
                     <div class="channel-item ${isActive}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
@@ -512,7 +528,7 @@
                     try {
                         const ch = JSON.parse(this.dataset.channel);
                         playChannel(ch);
-                    } catch (e) { console.warn('Error'); }
+                    } catch (e) { console.warn('Error al reproducir'); }
                 });
             });
 
@@ -537,13 +553,16 @@
 
         // --- REPRODUCIR ---
         function playChannel(channel) {
-            if (!channel || !channel.liveUrl) return;
+            if (!channel || !channel.liveUrl) {
+                console.warn('Canal sin URL');
+                return;
+            }
             currentChannel = channel;
             placeholder.style.display = 'none';
 
             const url = channel.liveUrl;
 
-            if (url.includes('.m3u8') || url.includes('pluto.tv') || url.includes('akamaized')) {
+            if (url.includes('.m3u8') || url.includes('pluto.tv') || url.includes('akamaized') || url.includes('cdn')) {
                 videoPlayer.style.display = 'block';
                 iframePlayer.style.display = 'none';
                 if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
@@ -593,23 +612,23 @@
             document.head.appendChild(script);
         }
 
-        // --- EVENTO DE CAMBIO DE FUENTE ---
+        // --- EVENTO DE CAMBIO DE PAÍS ---
         sourceSelector.addEventListener('change', function() {
-            loadSource(this.value);
+            loadCountry(this.value);
         });
 
-        // --- INICIAR (carga SOLO PLEX por defecto) ---
-        sourceSelector.value = 'iptvorg';
-        loadSource('iptvorg');
+        // --- INICIAR (México por defecto) ---
+        sourceSelector.value = 'mx';
+        loadCountry('mx');
 
-        // Funciones útiles en consola
+        // Funciones útiles
         window.Teves = {
-            loadSource: loadSource,
+            loadCountry: loadCountry,
             playChannel: playChannel,
             channels: () => allChannels
         };
-        console.log('📺 Teves cargado - evitando errores CORS');
-        console.log('💡 Fuentes disponibles: Free-TV, SOLO PLEX, IPTV-Org');
+        console.log('📺 Teves Español cargado - Rápido y filtrado por país');
+        console.log('💡 Selecciona tu país en el menú desplegable');
     </script>
 </body>
 </html>
