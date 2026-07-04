@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teves - TV en Español (con Categorías)</title>
+    <title>Teves - TV Gratis (TDTChannels)</title>
     <style>
         * {
             margin: 0;
@@ -68,7 +68,7 @@
             border-radius: 3px;
             font-size: 10px;
             cursor: pointer;
-            max-width: 110px;
+            max-width: 140px;
         }
         .badge {
             background: #e50914;
@@ -258,7 +258,7 @@
                 font-size: 13px;
             }
             .controls select {
-                max-width: 80px;
+                max-width: 100px;
                 font-size: 8px;
                 padding: 2px 4px;
             }
@@ -286,37 +286,18 @@
         </div>
         <div class="controls">
             <span class="status-text" id="channelCount">Cargando...</span>
-            <select id="countrySelector">
-                <option value="es">🇪🇸 España</option>
-                <option value="mx" selected>🇲🇽 México</option>
-                <option value="co">🇨🇴 Colombia</option>
-                <option value="ar">🇦🇷 Argentina</option>
-                <option value="pe">🇵🇪 Perú</option>
-                <option value="cl">🇨🇱 Chile</option>
-                <option value="ve">🇻🇪 Venezuela</option>
-                <option value="ec">🇪🇨 Ecuador</option>
-                <option value="gt">🇬🇹 Guatemala</option>
-                <option value="bo">🇧🇴 Bolivia</option>
-                <option value="cr">🇨🇷 Costa Rica</option>
-                <option value="do">🇩🇴 Rep. Dominicana</option>
-                <option value="pa">🇵🇦 Panamá</option>
-                <option value="uy">🇺🇾 Uruguay</option>
-                <option value="py">🇵🇾 Paraguay</option>
-                <option value="ni">🇳🇮 Nicaragua</option>
-                <option value="hn">🇭🇳 Honduras</option>
-                <option value="sv">🇸🇻 El Salvador</option>
+            <select id="sourceSelector">
+                <option value="tdt">📡 TDTChannels (España/Latino)</option>
+                <option value="freetv">🎬 Free-TV (Plex, Pluto, Roku)</option>
             </select>
-            <select id="categoryFilter">
-                <option value="all">🎯 Todas</option>
-            </select>
-            <span class="badge">CAT</span>
+            <span class="badge">GRATIS</span>
         </div>
     </header>
 
     <div class="container">
         <aside class="sidebar" id="sidebar">
             <div style="padding:15px;text-align:center;color:#555;font-size:11px;">
-                Selecciona país y categoría
+                Selecciona una fuente arriba
             </div>
         </aside>
 
@@ -324,8 +305,8 @@
             <div class="player-wrapper" id="playerWrapper">
                 <div class="placeholder" id="placeholder">
                     <div class="icon">📺</div>
-                    <h2>Teves con Categorías</h2>
-                    <p>Elige país, filtra por tipo y haz clic</p>
+                    <h2>Teves con TDTChannels</h2>
+                    <p>Elige un canal de la lista</p>
                 </div>
                 <video id="videoPlayer" style="display:none;" controls autoplay playsinline></video>
                 <iframe id="iframePlayer" style="display:none;" allowfullscreen></iframe>
@@ -349,8 +330,7 @@
 
     <script>
         // ============================================================
-        // TEVES - VERSIÓN CON FILTRO POR CATEGORÍA
-        // Mapea group-title a español para que sea fácil de usar
+        // TEVES - CON TDTCHANNELS (LA LISTA MÁS FIABLE EN ESPAÑOL)
         // ============================================================
 
         const CONFIG = {
@@ -358,14 +338,12 @@
         };
 
         let allChannels = [];
-        let filteredChannels = [];
         let currentPage = 0;
         let currentChannel = null;
         let isLoading = false;
 
         const sidebar = document.getElementById('sidebar');
-        const countrySelector = document.getElementById('countrySelector');
-        const categoryFilter = document.getElementById('categoryFilter');
+        const sourceSelector = document.getElementById('sourceSelector');
         const channelCount = document.getElementById('channelCount');
         const placeholder = document.getElementById('placeholder');
         const videoPlayer = document.getElementById('videoPlayer');
@@ -374,48 +352,19 @@
         const nowName = document.getElementById('nowName');
         const nowCat = document.getElementById('nowCat');
 
-        // --- MAPEO DE CATEGORÍAS AL ESPAÑOL ---
-        const categoryMap = {
-            'Movies': '🎬 Películas',
-            'Movie': '🎬 Películas',
-            'Series': '📺 Series',
-            'Kids': '👶 Infantil',
-            'Children': '👶 Infantil',
-            'Documentary': '📚 Educativo/Doc.',
-            'Educational': '📚 Educativo',
-            'News': '📰 Noticias',
-            'Sports': '⚽ Deportes',
-            'Music': '🎵 Música',
-            'Entertainment': '🎭 Entretenimiento',
-            'Comedy': '😂 Comedia',
-            'Drama': '🎭 Drama',
-            'Reality': '📺 Reality',
-            'Talk': '🎙️ Talk Show',
-            'General': '📡 General',
-            'Latino': '🌎 Latino',
-            'Cine': '🎬 Cine',
-            'Películas': '🎬 Películas',
-            'Infantil': '👶 Infantil',
-            'Deportes': '⚽ Deportes',
-            'Noticias': '📰 Noticias',
-            'Educativo': '📚 Educativo',
-            'Música': '🎵 Música'
-        };
-
-        function translateCategory(cat) {
-            const lower = cat.trim();
-            // Buscar coincidencia exacta o parcial
-            for (let [key, value] of Object.entries(categoryMap)) {
-                if (lower.toLowerCase().includes(key.toLowerCase())) {
-                    return value;
-                }
+        // --- DEFINICIÓN DE FUENTES (TODAS LEGALES Y CON BUENA SEÑAL) ---
+        const SOURCES = {
+            tdt: {
+                name: 'TDTChannels',
+                type: 'm3u',
+                url: 'https://www.tdtchannels.com/lists/tv.m3u8'
+            },
+            freetv: {
+                name: 'Free-TV (Plex, Pluto, Roku, Samsung)',
+                type: 'm3u',
+                url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8'
             }
-            return cat; // Si no encuentra, deja el original
-        }
-
-        function getCountryUrl(countryCode) {
-            return `https://iptv-org.github.io/iptv/countries/${countryCode}.m3u`;
-        }
+        };
 
         // --- CACHÉ ---
         function saveCache(key, data) {
@@ -429,44 +378,24 @@
             } catch (e) { return null; }
         }
 
-        // --- CARGAR PAÍS ---
-        async function loadCountry(countryCode) {
+        // --- CARGAR CANALES ---
+        async function loadSource(sourceKey) {
             if (isLoading) return;
             isLoading = true;
+            const source = SOURCES[sourceKey];
+            if (!source) return;
 
-            const countryNames = {
-                es: 'España',
-                mx: 'México',
-                co: 'Colombia',
-                ar: 'Argentina',
-                pe: 'Perú',
-                cl: 'Chile',
-                ve: 'Venezuela',
-                ec: 'Ecuador',
-                gt: 'Guatemala',
-                bo: 'Bolivia',
-                cr: 'Costa Rica',
-                do: 'Rep. Dominicana',
-                pa: 'Panamá',
-                uy: 'Uruguay',
-                py: 'Paraguay',
-                ni: 'Nicaragua',
-                hn: 'Honduras',
-                sv: 'El Salvador'
-            };
-            const countryName = countryNames[countryCode] || countryCode.toUpperCase();
             channelCount.textContent = 'Descargando...';
             sidebar.innerHTML =
-                `<div style="padding:20px;text-align:center;color:#555;font-size:11px;">⏳ Cargando ${countryName}<br><span style="font-size:9px;">(filtrando por categoría)</span></div>`;
+                `<div style="padding:20px;text-align:center;color:#555;font-size:11px;">⏳ Cargando ${source.name}<br><span style="font-size:9px;">(puede tardar unos segundos)</span></div>`;
 
-            const cacheKey = `channels_${countryCode}`;
+            const cacheKey = `channels_${sourceKey}`;
             let channels = getCache(cacheKey);
 
             if (!channels) {
                 try {
-                    const url = getCountryUrl(countryCode);
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('Error al descargar');
+                    const response = await fetch(source.url);
+                    if (!response.ok) throw new Error('Error de red');
                     const data = await response.text();
                     channels = parseM3U(data);
                     saveCache(cacheKey, channels);
@@ -474,7 +403,8 @@
                     console.error(error);
                     sidebar.innerHTML = `
                         <div style="padding:20px;text-align:center;color:#e50914;font-size:12px;">
-                            ❌ Error<br><span style="font-size:9px;color:#666;">${error.message}</span>
+                            ❌ Error al cargar<br>
+                            <span style="font-size:9px;color:#666;">${error.message}</span>
                             <button onclick="location.reload()" style="margin-top:8px;padding:3px 12px;background:#e50914;border:none;color:#fff;border-radius:3px;cursor:pointer;font-size:10px;">Reintentar</button>
                         </div>
                     `;
@@ -482,13 +412,14 @@
                     isLoading = false;
                     return;
                 }
+            } else {
+                console.log('Cargado desde caché local');
             }
 
             allChannels = channels;
-            // Poblar el desplegable de categorías
-            populateCategories();
-            // Aplicar filtro inicial (Todas)
-            applyCategoryFilter();
+            currentPage = 0;
+            channelCount.textContent = `${allChannels.length} canales`;
+            renderChannels();
             isLoading = false;
         }
 
@@ -511,9 +442,6 @@
                     const groupMatch = line.match(/group-title="([^"]*)"/);
                     if (groupMatch) category = groupMatch[1];
 
-                    // Traducir categoría al español
-                    category = translateCategory(category);
-
                     const parts = line.split(',');
                     if (parts.length > 1) {
                         name = parts[parts.length - 1].trim();
@@ -532,61 +460,15 @@
             return channels;
         }
 
-        // --- POBLAR CATEGORÍAS (desplegable) ---
-        function populateCategories() {
-            // Extraer categorías únicas
-            const catSet = new Set();
-            allChannels.forEach(ch => {
-                if (ch.category) catSet.add(ch.category);
-            });
-
-            // Ordenar alfabéticamente
-            const sortedCats = Array.from(catSet).sort();
-
-            // Guardar selección actual para restaurarla si es posible
-            const currentVal = categoryFilter.value;
-
-            // Limpiar y añadir opciones
-            categoryFilter.innerHTML = '<option value="all">🎯 Todas</option>';
-            sortedCats.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                categoryFilter.appendChild(option);
-            });
-
-            // Restaurar selección si existe en la nueva lista
-            if (currentVal !== 'all' && sortedCats.includes(currentVal)) {
-                categoryFilter.value = currentVal;
-            } else {
-                categoryFilter.value = 'all';
-            }
-        }
-
-        // --- APLICAR FILTRO DE CATEGORÍA ---
-        function applyCategoryFilter() {
-            const selectedCategory = categoryFilter.value;
-
-            if (selectedCategory === 'all') {
-                filteredChannels = [...allChannels];
-            } else {
-                filteredChannels = allChannels.filter(ch => ch.category === selectedCategory);
-            }
-
-            currentPage = 0;
-            channelCount.textContent = `${filteredChannels.length} canales`;
-            renderChannels();
-        }
-
-        // --- RENDERIZAR (paginado) ---
+        // --- RENDERIZAR ---
         function renderChannels() {
             const start = currentPage * CONFIG.itemsPerPage;
             const end = start + CONFIG.itemsPerPage;
-            const pageChannels = filteredChannels.slice(start, end);
+            const pageChannels = allChannels.slice(start, end);
 
             if (pageChannels.length === 0 && currentPage === 0) {
                 sidebar.innerHTML =
-                    `<div style="padding:20px;text-align:center;color:#555;font-size:11px;">📭 Sin canales en esta categoría<br><span style="font-size:9px;">Prueba otra categoría o país</span></div>`;
+                    `<div style="padding:20px;text-align:center;color:#555;font-size:11px;">📭 No se encontraron canales<br><span style="font-size:9px;">Prueba otra fuente</span></div>`;
                 return;
             }
 
@@ -606,8 +488,8 @@
                 `;
             });
 
-            if (end < filteredChannels.length) {
-                html += `<div class="load-more-btn" id="loadMoreBtn">⬇️ Cargar más (${filteredChannels.length - end} restantes)</div>`;
+            if (end < allChannels.length) {
+                html += `<div class="load-more-btn" id="loadMoreBtn">⬇️ Cargar más (${allChannels.length - end} restantes)</div>`;
             }
 
             sidebar.innerHTML = html;
@@ -699,25 +581,21 @@
         }
 
         // --- EVENTOS ---
-        countrySelector.addEventListener('change', function() {
-            loadCountry(this.value);
+        sourceSelector.addEventListener('change', function() {
+            loadSource(this.value);
         });
 
-        categoryFilter.addEventListener('change', function() {
-            applyCategoryFilter();
-        });
-
-        // --- INICIAR ---
-        countrySelector.value = 'mx';
-        loadCountry('mx');
+        // --- INICIAR (carga TDTChannels por defecto) ---
+        sourceSelector.value = 'tdt';
+        loadSource('tdt');
 
         window.Teves = {
-            loadCountry: loadCountry,
+            loadSource: loadSource,
             playChannel: playChannel,
-            channels: () => allChannels,
-            categories: () => Array.from(new Set(allChannels.map(c => c.category))).sort()
+            channels: () => allChannels
         };
-        console.log('📺 Teves con Categorías - Elige el tipo de canal que quieras ver');
+        console.log('📺 Teves con TDTChannels - La lista más fiable en español');
+        console.log('💡 Si no ves canales, prueba cambiar a "Free-TV" en el menú');
     </script>
 </body>
 </html>
