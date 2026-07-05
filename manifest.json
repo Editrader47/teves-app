@@ -8,12 +8,12 @@
   "theme_color": "#e50914",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/192px-Television_icon.svg.png",
+      "src": "/teves-app/mi_icono_192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/512px-Television_icon.svg.png",
+      "src": "/teves-app/mi_icono_512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
