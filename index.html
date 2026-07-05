@@ -82,19 +82,6 @@
             font-size: 9px;
             color: #aaa;
         }
-        .btn-restore {
-            background: #333;
-            color: #aaa;
-            border: 1px solid #555;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 8px;
-            cursor: pointer;
-        }
-        .btn-restore:hover {
-            background: #444;
-            color: #fff;
-        }
         .container {
             display: flex;
             flex: 1;
@@ -120,8 +107,8 @@
         .channel-item {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 6px;
+            gap: 5px;
+            padding: 4px 8px;
             cursor: pointer;
             border-left: 3px solid transparent;
             transition: background 0.1s;
@@ -161,20 +148,6 @@
             border-radius: 3px;
             font-weight: 700;
             text-transform: uppercase;
-        }
-        .channel-item .btn-hide {
-            background: transparent;
-            border: none;
-            color: #555;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 0 4px;
-            opacity: 0.3;
-            transition: opacity 0.2s;
-        }
-        .channel-item .btn-hide:hover {
-            opacity: 1;
-            color: #e50914;
         }
         .load-more-btn {
             background: #1a1a2e;
@@ -289,9 +262,6 @@
                 font-size: 8px;
                 padding: 2px 4px;
             }
-            .channel-item .btn-hide {
-                font-size: 10px;
-            }
         }
         @media (max-width: 500px) {
             .container {
@@ -339,7 +309,6 @@
             <select id="categoryFilter">
                 <option value="all">🎯 Todas</option>
             </select>
-            <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
             <span class="badge">CAT</span>
         </div>
     </header>
@@ -380,7 +349,8 @@
 
     <script>
         // ============================================================
-        // TEVES - PAÍSES + CATEGORÍAS + OCULTAR CANALES
+        // TEVES - PAÍSES + CATEGORÍAS (VERSIÓN COMPLETA)
+        // Fuente: IPTV-Org (canales por país)
         // ============================================================
 
         const CONFIG = {
@@ -392,45 +362,6 @@
         let currentPage = 0;
         let currentChannel = null;
         let isLoading = false;
-        let hiddenIds = [];
-
-        // Cargar lista de canales ocultos desde localStorage
-        function loadHidden() {
-            try {
-                const data = localStorage.getItem('teves_hidden');
-                hiddenIds = data ? JSON.parse(data) : [];
-            } catch (e) { hiddenIds = []; }
-        }
-
-        function saveHidden() {
-            try {
-                localStorage.setItem('teves_hidden', JSON.stringify(hiddenIds));
-            } catch (e) {}
-        }
-
-        function isHidden(channel) {
-            return hiddenIds.includes(channel.id);
-        }
-
-        function hideChannel(channel) {
-            if (!hiddenIds.includes(channel.id)) {
-                hiddenIds.push(channel.id);
-                saveHidden();
-                // Remover de las listas
-                allChannels = allChannels.filter(ch => ch.id !== channel.id);
-                filteredChannels = filteredChannels.filter(ch => ch.id !== channel.id);
-                // Re-renderizar
-                applyCategoryFilter();
-            }
-        }
-
-        function restoreAll() {
-            hiddenIds = [];
-            saveHidden();
-            // Recargar el país actual para restaurar todos los canales
-            const currentCountry = countrySelector.value;
-            loadCountry(currentCountry);
-        }
 
         const sidebar = document.getElementById('sidebar');
         const countrySelector = document.getElementById('countrySelector');
@@ -442,9 +373,8 @@
         const nowLogo = document.getElementById('nowLogo');
         const nowName = document.getElementById('nowName');
         const nowCat = document.getElementById('nowCat');
-        const restoreBtn = document.getElementById('restoreBtn');
 
-        // --- MAPEO DE CATEGORÍAS ---
+        // --- MAPEO DE CATEGORÍAS AL ESPAÑOL ---
         const categoryMap = {
             'Movies': '🎬 Películas',
             'Movie': '🎬 Películas',
@@ -553,8 +483,7 @@
                 }
             }
 
-            // Filtrar canales ocultos
-            allChannels = channels.filter(ch => !isHidden(ch));
+            allChannels = channels;
             populateCategories();
             applyCategoryFilter();
             isLoading = false;
@@ -591,8 +520,6 @@
                 } else if (line && !line.startsWith('#') && current) {
                     if (line.startsWith('http://') || line.startsWith('https://')) {
                         current.liveUrl = line;
-                        // Asignar un ID único
-                        current.id = 'ch_' + Math.random().toString(36).substr(2, 8);
                         channels.push(current);
                         current = null;
                     }
@@ -655,6 +582,7 @@
 
             let html = '';
             pageChannels.forEach(ch => {
+                if (!ch.id) ch.id = 'ch_' + Math.random().toString(36).substr(2, 6);
                 const isActive = (currentChannel && currentChannel.id === ch.id) ? 'active' : '';
                 html += `
                     <div class="channel-item ${isActive}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
@@ -664,7 +592,6 @@
                             <div class="cat">${ch.category}</div>
                         </div>
                         <span class="live">Live</span>
-                        <button class="btn-hide" title="Ocultar canal (no volverá a aparecer)">✕</button>
                     </div>
                 `;
             });
@@ -675,25 +602,12 @@
 
             sidebar.innerHTML = html;
 
-            // Evento para reproducir canal
             document.querySelectorAll('.channel-item').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    // Si el clic fue en el botón de ocultar, no reproducir
-                    if (e.target.classList.contains('btn-hide')) return;
+                el.addEventListener('click', function() {
                     try {
                         const ch = JSON.parse(this.dataset.channel);
                         playChannel(ch);
                     } catch (e) { console.warn('Error'); }
-                });
-            });
-
-            // Evento para ocultar canal
-            document.querySelectorAll('.btn-hide').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const parent = this.closest('.channel-item');
-                    const ch = JSON.parse(parent.dataset.channel);
-                    hideChannel(ch);
                 });
             });
 
@@ -783,14 +697,7 @@
             applyCategoryFilter();
         });
 
-        restoreBtn.addEventListener('click', function() {
-            if (confirm('¿Restaurar todos los canales ocultos?')) {
-                restoreAll();
-            }
-        });
-
         // --- INICIAR ---
-        loadHidden();
         countrySelector.value = 'mx';
         loadCountry('mx');
 
@@ -798,11 +705,9 @@
             loadCountry: loadCountry,
             playChannel: playChannel,
             channels: () => allChannels,
-            hidden: () => hiddenIds,
-            restoreAll: restoreAll
+            categories: () => Array.from(new Set(allChannels.map(c => c.category))).sort()
         };
-        console.log('📺 Teves con ocultar canales - Haz clic en ✕ para eliminar un canal');
-        console.log('💡 Los canales ocultos se guardan en tu navegador');
+        console.log('📺 Teves con Países y Categorías - Versión completa');
     </script>
 </body>
 </html>
