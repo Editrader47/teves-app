@@ -788,5 +788,13 @@
         };
         console.log('📺 Teves con botones de ocultar visibles');
     </script>
+    <script>
+    // Registrar el Service Worker para que la app sea instalable
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/teves-app/sw.js')
+            .then(() => console.log('✅ Service Worker registrado'))
+            .catch(err => console.log('❌ Error en Service Worker:', err));
+    }
+</script>
 </body>
 </html>
