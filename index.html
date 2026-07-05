@@ -82,6 +82,18 @@
             font-size: 9px;
             color: #aaa;
         }
+        .btn-restore {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .btn-restore:hover {
+            background: #555;
+        }
         .container {
             display: flex;
             flex: 1;
@@ -107,8 +119,8 @@
         .channel-item {
             display: flex;
             align-items: center;
-            gap: 5px;
-            padding: 4px 8px;
+            gap: 4px;
+            padding: 4px 6px;
             cursor: pointer;
             border-left: 3px solid transparent;
             transition: background 0.1s;
@@ -148,6 +160,23 @@
             border-radius: 3px;
             font-weight: 700;
             text-transform: uppercase;
+        }
+        /* BOTÓN OCULTAR - ULTRA VISIBLE */
+        .channel-item .btn-hide {
+            background: #e50914;
+            border: none;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 6px;
+            border-radius: 3px;
+            line-height: 18px;
+            opacity: 1;
+            transition: background 0.2s;
+        }
+        .channel-item .btn-hide:hover {
+            background: #ff3333;
         }
         .load-more-btn {
             background: #1a1a2e;
@@ -262,6 +291,11 @@
                 font-size: 8px;
                 padding: 2px 4px;
             }
+            .channel-item .btn-hide {
+                font-size: 12px;
+                line-height: 16px;
+                padding: 0 4px;
+            }
         }
         @media (max-width: 500px) {
             .container {
@@ -309,6 +343,7 @@
             <select id="categoryFilter">
                 <option value="all">🎯 Todas</option>
             </select>
+            <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
             <span class="badge">CAT</span>
         </div>
     </header>
@@ -349,8 +384,7 @@
 
     <script>
         // ============================================================
-        // TEVES - PAÍSES + CATEGORÍAS (VERSIÓN COMPLETA)
-        // Fuente: IPTV-Org (canales por país)
+        // TEVES - PAÍSES + CATEGORÍAS + OCULTAR CANALES
         // ============================================================
 
         const CONFIG = {
@@ -362,6 +396,41 @@
         let currentPage = 0;
         let currentChannel = null;
         let isLoading = false;
+        let hiddenIds = [];
+
+        function loadHidden() {
+            try {
+                const data = localStorage.getItem('teves_hidden');
+                hiddenIds = data ? JSON.parse(data) : [];
+            } catch (e) { hiddenIds = []; }
+        }
+
+        function saveHidden() {
+            try {
+                localStorage.setItem('teves_hidden', JSON.stringify(hiddenIds));
+            } catch (e) {}
+        }
+
+        function isHidden(channel) {
+            return hiddenIds.includes(channel.id);
+        }
+
+        function hideChannel(channel) {
+            if (!hiddenIds.includes(channel.id)) {
+                hiddenIds.push(channel.id);
+                saveHidden();
+                allChannels = allChannels.filter(ch => ch.id !== channel.id);
+                filteredChannels = filteredChannels.filter(ch => ch.id !== channel.id);
+                applyCategoryFilter();
+            }
+        }
+
+        function restoreAll() {
+            hiddenIds = [];
+            saveHidden();
+            const currentCountry = countrySelector.value;
+            loadCountry(currentCountry);
+        }
 
         const sidebar = document.getElementById('sidebar');
         const countrySelector = document.getElementById('countrySelector');
@@ -373,8 +442,8 @@
         const nowLogo = document.getElementById('nowLogo');
         const nowName = document.getElementById('nowName');
         const nowCat = document.getElementById('nowCat');
+        const restoreBtn = document.getElementById('restoreBtn');
 
-        // --- MAPEO DE CATEGORÍAS AL ESPAÑOL ---
         const categoryMap = {
             'Movies': '🎬 Películas',
             'Movie': '🎬 Películas',
@@ -416,7 +485,6 @@
             return `https://iptv-org.github.io/iptv/countries/${countryCode}.m3u`;
         }
 
-        // --- CACHÉ ---
         function saveCache(key, data) {
             try { localStorage.setItem('teves_' + key, JSON.stringify(data)); } catch (e) {}
         }
@@ -428,7 +496,6 @@
             } catch (e) { return null; }
         }
 
-        // --- CARGAR PAÍS ---
         async function loadCountry(countryCode) {
             if (isLoading) return;
             isLoading = true;
@@ -483,13 +550,12 @@
                 }
             }
 
-            allChannels = channels;
+            allChannels = channels.filter(ch => !isHidden(ch));
             populateCategories();
             applyCategoryFilter();
             isLoading = false;
         }
 
-        // --- PARSEAR M3U ---
         function parseM3U(text) {
             const lines = text.split('\n');
             const channels = [];
@@ -520,6 +586,7 @@
                 } else if (line && !line.startsWith('#') && current) {
                     if (line.startsWith('http://') || line.startsWith('https://')) {
                         current.liveUrl = line;
+                        current.id = 'ch_' + Math.random().toString(36).substr(2, 8);
                         channels.push(current);
                         current = null;
                     }
@@ -528,7 +595,6 @@
             return channels;
         }
 
-        // --- POBLAR CATEGORÍAS ---
         function populateCategories() {
             const catSet = new Set();
             allChannels.forEach(ch => {
@@ -553,7 +619,6 @@
             }
         }
 
-        // --- APLICAR FILTRO ---
         function applyCategoryFilter() {
             const selectedCategory = categoryFilter.value;
 
@@ -568,7 +633,6 @@
             renderChannels();
         }
 
-        // --- RENDERIZAR ---
         function renderChannels() {
             const start = currentPage * CONFIG.itemsPerPage;
             const end = start + CONFIG.itemsPerPage;
@@ -582,7 +646,6 @@
 
             let html = '';
             pageChannels.forEach(ch => {
-                if (!ch.id) ch.id = 'ch_' + Math.random().toString(36).substr(2, 6);
                 const isActive = (currentChannel && currentChannel.id === ch.id) ? 'active' : '';
                 html += `
                     <div class="channel-item ${isActive}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
@@ -592,6 +655,7 @@
                             <div class="cat">${ch.category}</div>
                         </div>
                         <span class="live">Live</span>
+                        <button class="btn-hide" title="Ocultar canal (no volverá a aparecer)">✕</button>
                     </div>
                 `;
             });
@@ -603,11 +667,21 @@
             sidebar.innerHTML = html;
 
             document.querySelectorAll('.channel-item').forEach(el => {
-                el.addEventListener('click', function() {
+                el.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('btn-hide')) return;
                     try {
                         const ch = JSON.parse(this.dataset.channel);
                         playChannel(ch);
                     } catch (e) { console.warn('Error'); }
+                });
+            });
+
+            document.querySelectorAll('.btn-hide').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const parent = this.closest('.channel-item');
+                    const ch = JSON.parse(parent.dataset.channel);
+                    hideChannel(ch);
                 });
             });
 
@@ -630,7 +704,6 @@
             }
         }
 
-        // --- REPRODUCIR ---
         function playChannel(channel) {
             if (!channel || !channel.liveUrl) return;
             currentChannel = channel;
@@ -688,7 +761,6 @@
             document.head.appendChild(script);
         }
 
-        // --- EVENTOS ---
         countrySelector.addEventListener('change', function() {
             loadCountry(this.value);
         });
@@ -697,7 +769,13 @@
             applyCategoryFilter();
         });
 
-        // --- INICIAR ---
+        restoreBtn.addEventListener('click', function() {
+            if (confirm('¿Restaurar todos los canales ocultos?')) {
+                restoreAll();
+            }
+        });
+
+        loadHidden();
         countrySelector.value = 'mx';
         loadCountry('mx');
 
@@ -705,9 +783,10 @@
             loadCountry: loadCountry,
             playChannel: playChannel,
             channels: () => allChannels,
-            categories: () => Array.from(new Set(allChannels.map(c => c.category))).sort()
+            hidden: () => hiddenIds,
+            restoreAll: restoreAll
         };
-        console.log('📺 Teves con Países y Categorías - Versión completa');
+        console.log('📺 Teves con botones de ocultar visibles');
     </script>
 </body>
 </html>
