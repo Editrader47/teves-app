@@ -95,6 +95,19 @@
         .btn-restore:hover {
             background: #555;
         }
+        .btn-install {
+            background: #e50914;
+            color: #fff;
+            border: none;
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            display: none;
+        }
+        .btn-install:hover {
+            background: #ff3333;
+        }
         .container {
             display: flex;
             flex: 1;
@@ -162,7 +175,6 @@
             font-weight: 700;
             text-transform: uppercase;
         }
-        /* BOTÓN OCULTAR - ULTRA VISIBLE */
         .channel-item .btn-hide {
             background: #e50914;
             border: none;
@@ -345,6 +357,7 @@
                 <option value="all">🎯 Todas</option>
             </select>
             <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
+            <button class="btn-install" id="installBtn">📲 Instalar App</button>
             <span class="badge">CAT</span>
         </div>
     </header>
@@ -385,7 +398,7 @@
 
     <script>
         // ============================================================
-        // TEVES - PAÍSES + CATEGORÍAS + OCULTAR CANALES
+        // TEVES - PAÍSES + CATEGORÍAS + OCULTAR CANALES (CORREGIDO)
         // ============================================================
 
         const CONFIG = {
@@ -420,6 +433,7 @@
             if (!hiddenIds.includes(channel.id)) {
                 hiddenIds.push(channel.id);
                 saveHidden();
+                // Filtrar SOLO el canal oculto, no toda la categoría
                 allChannels = allChannels.filter(ch => ch.id !== channel.id);
                 filteredChannels = filteredChannels.filter(ch => ch.id !== channel.id);
                 applyCategoryFilter();
@@ -551,6 +565,7 @@
                 }
             }
 
+            // Filtrar canales ocultos
             allChannels = channels.filter(ch => !isHidden(ch));
             populateCategories();
             applyCategoryFilter();
@@ -587,7 +602,8 @@
                 } else if (line && !line.startsWith('#') && current) {
                     if (line.startsWith('http://') || line.startsWith('https://')) {
                         current.liveUrl = line;
-                        current.id = 'ch_' + Math.random().toString(36).substr(2, 8);
+                        // ID PERSISTENTE basado en nombre + URL (evita duplicados y fallos)
+                        current.id = 'ch_' + btoa(current.name + current.liveUrl).replace(/[^a-zA-Z0-9]/g, '').substr(0, 20);
                         channels.push(current);
                         current = null;
                     }
@@ -776,6 +792,37 @@
             }
         });
 
+        // ============================================================
+        // BOTÓN DE INSTALACIÓN (FORZADO)
+        // ============================================================
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'inline-block';
+            console.log('✅ Evento beforeinstallprompt detectado');
+        });
+
+        installBtn.addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('✅ App instalada');
+                    } else {
+                        console.log('❌ Instalación cancelada');
+                    }
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                });
+            } else {
+                // Si el evento no se disparó, mostrar mensaje
+                alert('⚠️ No se puede instalar. Asegúrate de usar Chrome y que la página sea HTTPS.');
+            }
+        });
+
         loadHidden();
         countrySelector.value = 'mx';
         loadCountry('mx');
@@ -787,10 +834,10 @@
             hidden: () => hiddenIds,
             restoreAll: restoreAll
         };
-        console.log('📺 Teves con botones de ocultar visibles');
+        console.log('📺 Teves con ocultar corregido y botón de instalación');
     </script>
     <script>
-    // Registrar el Service Worker para que la app sea instalable
+    // Registrar el Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/teves-app/sw.js')
             .then(() => console.log('✅ Service Worker registrado'))
