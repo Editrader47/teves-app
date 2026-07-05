@@ -2,18 +2,18 @@
   "name": "Teves - TV Gratis",
   "short_name": "Teves",
   "description": "Ver televisión gratis por internet con canales en español.",
-  "start_url": "/teves-app/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#e50914",
   "icons": [
     {
-      "src": "/teves-app/mi_icono_192.png",
+      "src": "mi_icono_192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/teves-app/mi_icono_512.png",
+      "src": "mi_icono_512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
