@@ -152,17 +152,8 @@
             45% { left: 130%; }
             100% { left: 130%; }
         }
-        /* DIAGNÓSTICO TEMPORAL: prefers-reduced-motion deshabilitado para confirmar causa raíz
-        @media (prefers-reduced-motion: reduce) {
-            .btn-donate {
-                animation: none;
-            }
-            .btn-donate::after {
-                animation: none;
-                display: none;
-            }
-        }
-        */
+        /* Nota: por decisión del proyecto, esta app no respeta prefers-reduced-motion
+           para el botón de donación — la animación se prioriza como llamado a la acción. */
         .btn-install {
             background: #14b8a6;
             color: #fff;
