@@ -5,6 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Teves - TV en Español (con Categorías)</title>
+    <meta name="theme-color" content="#e50914" />
+    <link rel="icon" type="image/png" href="mi_icono_192.png" />
+    <link rel="apple-touch-icon" href="mi_icono_192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Teves" />
     <style>
         * {
             margin: 0;
@@ -107,6 +114,24 @@
         }
         .btn-install:hover {
             background: #ff3333;
+        }
+        .signal-toggle {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 9px;
+            color: #aaa;
+            cursor: pointer;
+            user-select: none;
+        }
+        .signal-toggle input {
+            cursor: pointer;
+        }
+        .channel-item.channel-dead {
+            opacity: 0.45;
+        }
+        .channel-item.channel-dead .live {
+            background: #444;
         }
         .container {
             display: flex;
@@ -356,6 +381,9 @@
             <select id="categoryFilter">
                 <option value="all">🎯 Todas</option>
             </select>
+            <label class="signal-toggle" title="Ocultar canales que fallaron al reproducir">
+                <input type="checkbox" id="onlySignalToggle" /> 📶 Solo con señal
+            </label>
             <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
             <button class="btn-install" id="installBtn">📲 Instalar App</button>
             <span class="badge">CAT</span>
@@ -402,7 +430,11 @@
         // ============================================================
 
         const CONFIG = {
-            itemsPerPage: 40
+            itemsPerPage: 40,
+            maxRetries: 2,
+            retryDelayMs: 1500,
+            connectTimeoutMs: 8000,
+            signalCacheHours: 6
         };
 
         let allChannels = [];
@@ -411,6 +443,34 @@
         let currentChannel = null;
         let isLoading = false;
         let hiddenIds = [];
+        let signalStatus = {};
+        let onlySignal = false;
+        let currentRetries = 0;
+        let connectTimeoutHandle = null;
+
+        function loadSignalStatus() {
+            try {
+                const data = localStorage.getItem('teves_signal');
+                signalStatus = data ? JSON.parse(data) : {};
+            } catch (e) { signalStatus = {}; }
+        }
+
+        function saveSignalStatus() {
+            try { localStorage.setItem('teves_signal', JSON.stringify(signalStatus)); } catch (e) {}
+        }
+
+        function getSignal(id) {
+            const entry = signalStatus[id];
+            if (!entry) return null;
+            const ageHours = (Date.now() - entry.ts) / 3600000;
+            if (ageHours > CONFIG.signalCacheHours) return null;
+            return entry.ok;
+        }
+
+        function setSignal(id, ok) {
+            signalStatus[id] = { ok, ts: Date.now() };
+            saveSignalStatus();
+        }
 
         function loadHidden() {
             try {
@@ -458,6 +518,7 @@
         const nowName = document.getElementById('nowName');
         const nowCat = document.getElementById('nowCat');
         const restoreBtn = document.getElementById('restoreBtn');
+        const onlySignalToggle = document.getElementById('onlySignalToggle');
 
         const categoryMap = {
             'Movies': '🎬 Películas',
@@ -645,6 +706,10 @@
                 filteredChannels = allChannels.filter(ch => ch.category === selectedCategory);
             }
 
+            if (onlySignal) {
+                filteredChannels = filteredChannels.filter(ch => getSignal(ch.id) !== false);
+            }
+
             currentPage = 0;
             channelCount.textContent = `${filteredChannels.length} canales`;
             renderChannels();
@@ -664,14 +729,16 @@
             let html = '';
             pageChannels.forEach(ch => {
                 const isActive = (currentChannel && currentChannel.id === ch.id) ? 'active' : '';
+                const signal = getSignal(ch.id);
+                const deadClass = signal === false ? 'channel-dead' : '';
                 html += `
-                    <div class="channel-item ${isActive}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
+                    <div class="channel-item ${isActive} ${deadClass}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
                         <img src="${ch.logo}" alt="${ch.name}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
                         <div class="info">
                             <div class="name">${ch.name}</div>
                             <div class="cat">${ch.category}</div>
                         </div>
-                        <span class="live">Live</span>
+                        <span class="live">${signal === false ? 'Sin señal' : 'Live'}</span>
                         <button class="btn-hide" title="Ocultar canal (no volverá a aparecer)">✕</button>
                     </div>
                 `;
@@ -724,29 +791,8 @@
         function playChannel(channel) {
             if (!channel || !channel.liveUrl) return;
             currentChannel = channel;
+            currentRetries = 0;
             placeholder.style.display = 'none';
-
-            const url = channel.liveUrl;
-
-            if (url.includes('.m3u8') || url.includes('pluto.tv') || url.includes('akamaized') || url.includes('cdn')) {
-                videoPlayer.style.display = 'block';
-                iframePlayer.style.display = 'none';
-                if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                    videoPlayer.src = url;
-                } else {
-                    loadHLS(url);
-                }
-                videoPlayer.play().catch(e => console.warn('Auto-play'));
-            } else if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
-                videoPlayer.style.display = 'none';
-                iframePlayer.style.display = 'block';
-                iframePlayer.src = url;
-            } else {
-                videoPlayer.style.display = 'block';
-                iframePlayer.style.display = 'none';
-                videoPlayer.src = url;
-                videoPlayer.play().catch(e => console.warn('Auto-play'));
-            }
 
             nowLogo.src = channel.logo || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png';
             nowName.textContent = channel.name;
@@ -759,6 +805,80 @@
                     if (ch.id === channel.id) el.classList.add('active');
                 } catch (e) {}
             });
+
+            playStream(channel);
+        }
+
+        function playStream(channel) {
+            const url = channel.liveUrl;
+            clearWatchdog();
+
+            if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+                videoPlayer.style.display = 'none';
+                iframePlayer.style.display = 'block';
+                iframePlayer.src = url;
+                return; // No se puede vigilar un iframe de terceros: sin watchdog aquí.
+            }
+
+            videoPlayer.style.display = 'block';
+            iframePlayer.style.display = 'none';
+
+            if (url.includes('.m3u8') || url.includes('pluto.tv') || url.includes('akamaized') || url.includes('cdn')) {
+                if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoPlayer.src = url;
+                } else {
+                    loadHLS(url);
+                }
+            } else {
+                videoPlayer.src = url;
+            }
+
+            videoPlayer.play().catch(e => console.warn('Auto-play bloqueado'));
+            armWatchdog(channel);
+        }
+
+        function armWatchdog(channel) {
+            connectTimeoutHandle = setTimeout(() => handleChannelFailure(channel), CONFIG.connectTimeoutMs);
+            videoPlayer.onerror = () => handleChannelFailure(channel);
+            videoPlayer.oncanplay = () => {
+                clearWatchdog();
+                setSignal(channel.id, true);
+                updateChannelBadge(channel.id, true);
+            };
+        }
+
+        function clearWatchdog() {
+            if (connectTimeoutHandle) {
+                clearTimeout(connectTimeoutHandle);
+                connectTimeoutHandle = null;
+            }
+            videoPlayer.onerror = null;
+            videoPlayer.oncanplay = null;
+        }
+
+        function handleChannelFailure(channel) {
+            clearWatchdog();
+            if (!currentChannel || currentChannel.id !== channel.id) return; // el usuario ya cambió de canal
+
+            if (currentRetries < CONFIG.maxRetries) {
+                currentRetries++;
+                nowCat.textContent = `⚠️ Reintentando (${currentRetries}/${CONFIG.maxRetries})...`;
+                setTimeout(() => {
+                    if (currentChannel && currentChannel.id === channel.id) playStream(channel);
+                }, CONFIG.retryDelayMs);
+            } else {
+                setSignal(channel.id, false);
+                nowCat.textContent = '❌ Canal sin señal';
+                updateChannelBadge(channel.id, false);
+            }
+        }
+
+        function updateChannelBadge(id, ok) {
+            const el = document.querySelector(`.channel-item[data-id="${id}"]`);
+            if (!el) return;
+            el.classList.toggle('channel-dead', ok === false);
+            const liveBadge = el.querySelector('.live');
+            if (liveBadge) liveBadge.textContent = ok === false ? 'Sin señal' : 'Live';
         }
 
         function loadHLS(url) {
@@ -783,6 +903,11 @@
         });
 
         categoryFilter.addEventListener('change', function() {
+            applyCategoryFilter();
+        });
+
+        onlySignalToggle.addEventListener('change', function() {
+            onlySignal = this.checked;
             applyCategoryFilter();
         });
 
@@ -824,6 +949,7 @@
         });
 
         loadHidden();
+        loadSignalStatus();
         countrySelector.value = 'mx';
         loadCountry('mx');
 
@@ -839,7 +965,7 @@
     <script>
     // Registrar el Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/teves-app/sw.js')
+        navigator.serviceWorker.register('./sw.js')
             .then(() => console.log('✅ Service Worker registrado'))
             .catch(err => console.log('❌ Error en Service Worker:', err));
     }

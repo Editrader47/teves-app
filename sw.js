@@ -1,8 +1,11 @@
 // Service Worker para Teves
-const CACHE_NAME = 'teves-v1';
+const CACHE_NAME = 'teves-v2';
 const urlsToCache = [
-  '/teves-app/',
-  '/teves-app/index.html'
+  './',
+  './index.html',
+  './manifest.json',
+  './mi_icono_192.png',
+  './mi_icono_512.png'
 ];
 
 self.addEventListener('install', event => {
