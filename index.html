@@ -108,6 +108,34 @@
         .btn-restore:hover {
             background: #555;
         }
+        .btn-donate {
+            background: #f5a623;
+            color: #3d2600;
+            border: none;
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.15s ease, background 0.15s ease;
+            animation: donatePulse 2.4s ease-in-out infinite;
+        }
+        .btn-donate:hover {
+            background: #ffbf4d;
+            transform: scale(1.06);
+            animation-play-state: paused;
+        }
+        @keyframes donatePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.55); transform: scale(1); }
+            50% { box-shadow: 0 0 0 8px rgba(245, 166, 35, 0); transform: scale(1.035); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .btn-donate {
+                animation: none;
+            }
+        }
         .btn-install {
             background: #14b8a6;
             color: #fff;
@@ -394,6 +422,7 @@
                 <input type="checkbox" id="onlySignalToggle" /> 📶 Solo con señal
             </label>
             <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
+            <a class="btn-donate" id="donateBtn" href="https://ko-fi.com/adahiapro" target="_blank" rel="noopener noreferrer">☕ Apóyanos</a>
             <button class="btn-install" id="installBtn">📲 Instalar App</button>
             <span class="badge">CAT</span>
         </div>
@@ -570,6 +599,15 @@
             return `https://iptv-org.github.io/iptv/countries/${countryCode}.m3u`;
         }
 
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function saveCache(key, data) {
             try { localStorage.setItem('teves_' + key, JSON.stringify(data)); } catch (e) {}
         }
@@ -625,7 +663,7 @@
                     console.error(error);
                     sidebar.innerHTML = `
                         <div style="padding:20px;text-align:center;color:#14b8a6;font-size:12px;">
-                            ❌ Error<br><span style="font-size:9px;color:#666;">${error.message}</span>
+                            ❌ Error<br><span style="font-size:9px;color:#666;">${escapeHtml(error.message)}</span>
                             <button onclick="location.reload()" style="margin-top:8px;padding:3px 12px;background:#14b8a6;border:none;color:#fff;border-radius:3px;cursor:pointer;font-size:10px;">Reintentar</button>
                         </div>
                     `;
@@ -742,10 +780,10 @@
                 const deadClass = signal === false ? 'channel-dead' : '';
                 html += `
                     <div class="channel-item ${isActive} ${deadClass}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
-                        <img src="${ch.logo}" alt="${ch.name}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
+                        <img src="${escapeHtml(ch.logo)}" alt="${escapeHtml(ch.name)}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
                         <div class="info">
-                            <div class="name">${ch.name}</div>
-                            <div class="cat">${ch.category}</div>
+                            <div class="name">${escapeHtml(ch.name)}</div>
+                            <div class="cat">${escapeHtml(ch.category)}</div>
                         </div>
                         <span class="live">${signal === false ? 'Sin señal' : 'Live'}</span>
                         <button class="btn-hide" title="Ocultar canal (no volverá a aparecer)">✕</button>
