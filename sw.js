@@ -1,5 +1,5 @@
 // Service Worker para Teves
-const CACHE_NAME = 'teves-v2';
+const CACHE_NAME = 'teves-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // activa el SW nuevo sin esperar a cerrar todas las pestañas/instancias
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
@@ -25,13 +26,30 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // toma control de la app inmediatamente
   );
 });
 
 self.addEventListener('fetch', event => {
+  const req = event.request;
+
+  // HTML (navegación): red primero, para que las actualizaciones se vean sin reinstalar.
+  // Si no hay red, cae a la copia en caché (modo offline intacto).
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then(res => res || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Resto de recursos (íconos, manifest): caché primero, cambian poco.
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    caches.match(req).then(response => response || fetch(req))
   );
 });
