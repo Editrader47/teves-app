@@ -33,7 +33,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #14b8a6;
+            border-bottom: 2px solid #e50914;
             flex-wrap: wrap;
             gap: 4px;
             flex-shrink: 0;
@@ -44,29 +44,23 @@
             gap: 6px;
         }
         .logo-icon {
+            background: #e50914;
             width: 26px;
             height: 26px;
             border-radius: 5px;
-            object-fit: cover;
-            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            color: #fff;
         }
         .logo h1 {
             font-size: 16px;
             font-weight: 700;
         }
         .logo h1 span {
-            color: #14b8a6;
-        }
-        .logo-text {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.15;
-        }
-        .signature {
-            font-size: 7px;
-            color: #666;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
+            color: #e50914;
         }
         .controls {
             display: flex;
@@ -85,7 +79,7 @@
             max-width: 110px;
         }
         .badge {
-            background: #14b8a6;
+            background: #e50914;
             padding: 1px 6px;
             border-radius: 8px;
             font-size: 7px;
@@ -108,54 +102,8 @@
         .btn-restore:hover {
             background: #555;
         }
-        .btn-donate {
-            background: #f5a623;
-            color: #3d2600;
-            border: none;
-            padding: 2px 10px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.15s ease, background 0.15s ease;
-            animation: donatePulse 2.4s ease-in-out infinite;
-        }
-        .btn-donate::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -75%;
-            width: 40%;
-            height: 100%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.65), transparent);
-            transform: skewX(-20deg);
-            animation: donateShine 2.6s ease-in-out infinite;
-        }
-        .btn-donate:hover {
-            background: #ffbf4d;
-            transform: scale(1.06);
-            animation-play-state: paused;
-        }
-        .btn-donate:hover::after {
-            animation-play-state: paused;
-        }
-        @keyframes donatePulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.55); transform: scale(1); }
-            50% { box-shadow: 0 0 0 8px rgba(245, 166, 35, 0); transform: scale(1.035); }
-        }
-        @keyframes donateShine {
-            0% { left: -75%; }
-            45% { left: 130%; }
-            100% { left: 130%; }
-        }
-        /* Nota: por decisión del proyecto, esta app no respeta prefers-reduced-motion
-           para el botón de donación — la animación se prioriza como llamado a la acción. */
         .btn-install {
-            background: #14b8a6;
+            background: #e50914;
             color: #fff;
             border: none;
             padding: 2px 10px;
@@ -165,7 +113,88 @@
             display: none;
         }
         .btn-install:hover {
-            background: #2dd4bf;
+            background: #ff3333;
+        }
+        .btn-info {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+        .btn-info:hover {
+            background: #555;
+        }
+        .info-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .info-overlay.open {
+            display: flex;
+        }
+        .info-card {
+            background: #111;
+            border: 1px solid #e50914;
+            border-radius: 6px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 16px 18px;
+            position: relative;
+        }
+        .info-card::-webkit-scrollbar {
+            width: 4px;
+        }
+        .info-card::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        .info-card h2 {
+            font-size: 14px;
+            color: #e50914;
+            margin: 14px 0 4px;
+        }
+        .info-card h2:first-of-type {
+            margin-top: 0;
+        }
+        .info-card p {
+            font-size: 11px;
+            color: #ccc;
+            line-height: 1.5;
+            margin-bottom: 2px;
+        }
+        .info-card a {
+            color: #4caf50;
+            text-decoration: none;
+        }
+        .info-card a:hover {
+            text-decoration: underline;
+        }
+        .info-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e50914;
+            border: none;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+        .info-close:hover {
+            background: #ff3333;
         }
         .signal-toggle {
             display: flex;
@@ -219,7 +248,7 @@
         .channel-item:hover,
         .channel-item.active {
             background: #1a1a2a;
-            border-left-color: #14b8a6;
+            border-left-color: #e50914;
         }
         .channel-item img {
             width: 20px;
@@ -245,7 +274,7 @@
             color: #666;
         }
         .channel-item .live {
-            background: #14b8a6;
+            background: #e50914;
             font-size: 6px;
             padding: 1px 4px;
             border-radius: 3px;
@@ -253,7 +282,7 @@
             text-transform: uppercase;
         }
         .channel-item .btn-hide {
-            background: #14b8a6;
+            background: #e50914;
             border: none;
             color: #fff;
             font-size: 14px;
@@ -266,7 +295,7 @@
             transition: background 0.2s;
         }
         .channel-item .btn-hide:hover {
-            background: #2dd4bf;
+            background: #ff3333;
         }
         .load-more-btn {
             background: #1a1a2e;
@@ -405,11 +434,8 @@
 
     <header class="header">
         <div class="logo">
-            <img class="logo-icon" src="mi_icono_192.png" alt="Teves" onerror="this.style.display='none'" />
-            <div class="logo-text">
-                <h1>Te<span>ves</span></h1>
-                <div class="signature">By Adahia Software Pro</div>
-            </div>
+            <div class="logo-icon">T</div>
+            <h1>Te<span>ves</span></h1>
         </div>
         <div class="controls">
             <span class="status-text" id="channelCount">Cargando...</span>
@@ -440,11 +466,29 @@
                 <input type="checkbox" id="onlySignalToggle" /> 📶 Solo con señal
             </label>
             <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
-            <a class="btn-donate" id="donateBtn" href="https://ko-fi.com/adahiapro" target="_blank" rel="noopener noreferrer">☕ Apóyanos</a>
             <button class="btn-install" id="installBtn">📲 Instalar App</button>
             <span class="badge">CAT</span>
+            <button class="btn-info" id="infoBtn" title="Acerca de, Privacidad, Contacto y Aviso Legal">ⓘ</button>
         </div>
     </header>
+
+    <div class="info-overlay" id="infoOverlay">
+        <div class="info-card">
+            <button class="info-close" id="infoCloseBtn">✕</button>
+
+            <h2>Acerca de Teves</h2>
+            <p>Teves es una aplicación desarrollada por <strong>Adahia Software Pro</strong> para explorar canales de televisión en español organizados por país y categoría, con fines de uso personal e informativo.</p>
+
+            <h2>Privacidad</h2>
+            <p>Teves no solicita registro ni recopila datos personales. Las preferencias de uso (canales ocultos, estado de señal) se guardan únicamente en tu propio dispositivo (almacenamiento local del navegador), y nunca se envían a servidores externos.</p>
+
+            <h2>Contacto</h2>
+            <p>Adahia Software Pro — <a href="mailto:adahisfpro@gmail.com">adahisfpro@gmail.com</a></p>
+
+            <h2>Aviso Legal</h2>
+            <p>Teves no aloja, produce ni almacena contenido audiovisual. Actúa únicamente como un catálogo que enlaza a fuentes públicas de terceros. Adahia Software Pro respeta los derechos de autor y atenderá cualquier solicitud justificada de retiro de un enlace a través del contacto indicado arriba.</p>
+        </div>
+    </div>
 
     <div class="container">
         <aside class="sidebar" id="sidebar">
@@ -617,15 +661,6 @@
             return `https://iptv-org.github.io/iptv/countries/${countryCode}.m3u`;
         }
 
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
         function saveCache(key, data) {
             try { localStorage.setItem('teves_' + key, JSON.stringify(data)); } catch (e) {}
         }
@@ -680,9 +715,9 @@
                 } catch (error) {
                     console.error(error);
                     sidebar.innerHTML = `
-                        <div style="padding:20px;text-align:center;color:#14b8a6;font-size:12px;">
-                            ❌ Error<br><span style="font-size:9px;color:#666;">${escapeHtml(error.message)}</span>
-                            <button onclick="location.reload()" style="margin-top:8px;padding:3px 12px;background:#14b8a6;border:none;color:#fff;border-radius:3px;cursor:pointer;font-size:10px;">Reintentar</button>
+                        <div style="padding:20px;text-align:center;color:#e50914;font-size:12px;">
+                            ❌ Error<br><span style="font-size:9px;color:#666;">${error.message}</span>
+                            <button onclick="location.reload()" style="margin-top:8px;padding:3px 12px;background:#e50914;border:none;color:#fff;border-radius:3px;cursor:pointer;font-size:10px;">Reintentar</button>
                         </div>
                     `;
                     channelCount.textContent = 'Error';
@@ -780,6 +815,12 @@
             renderChannels();
         }
 
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = String(str ?? '');
+            return div.innerHTML;
+        }
+
         function renderChannels() {
             const start = currentPage * CONFIG.itemsPerPage;
             const end = start + CONFIG.itemsPerPage;
@@ -796,12 +837,15 @@
                 const isActive = (currentChannel && currentChannel.id === ch.id) ? 'active' : '';
                 const signal = getSignal(ch.id);
                 const deadClass = signal === false ? 'channel-dead' : '';
+                const safeName = escapeHtml(ch.name);
+                const safeCategory = escapeHtml(ch.category);
+                const safeLogo = escapeHtml(ch.logo);
                 html += `
                     <div class="channel-item ${isActive} ${deadClass}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
-                        <img src="${escapeHtml(ch.logo)}" alt="${escapeHtml(ch.name)}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
+                        <img src="${safeLogo}" alt="${safeName}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
                         <div class="info">
-                            <div class="name">${escapeHtml(ch.name)}</div>
-                            <div class="cat">${escapeHtml(ch.category)}</div>
+                            <div class="name">${safeName}</div>
+                            <div class="cat">${safeCategory}</div>
                         </div>
                         <span class="live">${signal === false ? 'Sin señal' : 'Live'}</span>
                         <button class="btn-hide" title="Ocultar canal (no volverá a aparecer)">✕</button>
@@ -954,14 +998,31 @@
                 return;
             }
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+            script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js';
             script.onload = () => {
                 const hls = new Hls();
                 hls.loadSource(url);
                 hls.attachMedia(videoPlayer);
             };
+            script.onerror = () => {
+                console.error('❌ No se pudo cargar hls.js 1.6.16 desde el CDN');
+                nowCat.textContent = '❌ No se pudo cargar el reproductor';
+            };
             document.head.appendChild(script);
         }
+
+        // ============================================================
+        // MODAL DE INFORMACIÓN (Acerca de / Privacidad / Contacto / Aviso Legal)
+        // ============================================================
+        const infoBtn = document.getElementById('infoBtn');
+        const infoOverlay = document.getElementById('infoOverlay');
+        const infoCloseBtn = document.getElementById('infoCloseBtn');
+
+        infoBtn.addEventListener('click', () => infoOverlay.classList.add('open'));
+        infoCloseBtn.addEventListener('click', () => infoOverlay.classList.remove('open'));
+        infoOverlay.addEventListener('click', (e) => {
+            if (e.target === infoOverlay) infoOverlay.classList.remove('open');
+        });
 
         countrySelector.addEventListener('change', function() {
             loadCountry(this.value);
