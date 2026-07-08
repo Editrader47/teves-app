@@ -1,7 +1,7 @@
 {
-  "name": "Teves - TV Gratis",
+  "name": "Teves - TV en Español",
   "short_name": "Teves",
-  "description": "Ver televisión gratis por internet con canales en español.",
+  "description": "Explora canales de televisión en español organizados por país y categoría.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0a0a0f",
