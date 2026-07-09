@@ -43,7 +43,7 @@
             align-items: center;
             gap: 6px;
         }
-       .logo-icon {
+        .logo-icon {
             width: 26px;
             height: 26px;
             border-radius: 5px;
@@ -308,6 +308,21 @@
         .channel-item .btn-hide:hover {
             background: #ff3333;
         }
+        .channel-item .btn-favorite {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: color 0.2s;
+        }
+        .channel-item .btn-favorite.active {
+            color: #f5a623;
+        }
+        .channel-item .live.live-ok {
+            background: #4caf50;
+        }
         .load-more-btn {
             background: #1a1a2e;
             color: #aaa;
@@ -476,6 +491,9 @@
             <label class="signal-toggle" title="Ocultar canales que fallaron al reproducir">
                 <input type="checkbox" id="onlySignalToggle" /> 📶 Solo con señal
             </label>
+            <label class="signal-toggle" title="Mostrar solo canales marcados como favoritos">
+                <input type="checkbox" id="onlyFavToggle" /> ⭐ Favoritos
+            </label>
             <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
             <a class="btn-donate" id="donateBtn" href="https://ko-fi.com/adahiapro" target="_blank" rel="noopener noreferrer">☕ Apóyanos</a>
             <button class="btn-install" id="installBtn">📲 Instalar App</button>
@@ -557,6 +575,8 @@
         let hiddenIds = [];
         let signalStatus = {};
         let onlySignal = false;
+        let favoriteIds = [];
+        let onlyFav = false;
         let currentRetries = 0;
         let connectTimeoutHandle = null;
 
@@ -601,11 +621,34 @@
             return hiddenIds.includes(channel.id);
         }
 
+        function loadFavorites() {
+            try {
+                const data = localStorage.getItem('teves_favorites');
+                favoriteIds = data ? JSON.parse(data) : [];
+            } catch (e) { favoriteIds = []; }
+        }
+
+        function saveFavorites() {
+            try { localStorage.setItem('teves_favorites', JSON.stringify(favoriteIds)); } catch (e) {}
+        }
+
+        function isFavorite(id) {
+            return favoriteIds.includes(id);
+        }
+
+        function toggleFavorite(id) {
+            if (isFavorite(id)) {
+                favoriteIds = favoriteIds.filter(f => f !== id);
+            } else {
+                favoriteIds.push(id);
+            }
+            saveFavorites();
+        }
+
         function hideChannel(channel) {
             if (!hiddenIds.includes(channel.id)) {
                 hiddenIds.push(channel.id);
                 saveHidden();
-                // Filtrar SOLO el canal oculto, no toda la categoría
                 allChannels = allChannels.filter(ch => ch.id !== channel.id);
                 filteredChannels = filteredChannels.filter(ch => ch.id !== channel.id);
                 applyCategoryFilter();
@@ -631,6 +674,7 @@
         const nowCat = document.getElementById('nowCat');
         const restoreBtn = document.getElementById('restoreBtn');
         const onlySignalToggle = document.getElementById('onlySignalToggle');
+        const onlyFavToggle = document.getElementById('onlyFavToggle');
 
         const categoryMap = {
             'Movies': '🎬 Películas',
@@ -738,7 +782,6 @@
                 }
             }
 
-            // Filtrar canales ocultos
             allChannels = channels.filter(ch => !isHidden(ch));
             populateCategories();
             applyCategoryFilter();
@@ -775,7 +818,6 @@
                 } else if (line && !line.startsWith('#') && current) {
                     if (line.startsWith('http://') || line.startsWith('https://')) {
                         current.liveUrl = line;
-                        // ID PERSISTENTE basado en nombre + URL (evita duplicados y fallos)
                         current.id = 'ch_' + btoa(current.name + current.liveUrl).replace(/[^a-zA-Z0-9]/g, '').substr(0, 20);
                         channels.push(current);
                         current = null;
@@ -822,6 +864,10 @@
                 filteredChannels = filteredChannels.filter(ch => getSignal(ch.id) !== false);
             }
 
+            if (onlyFav) {
+                filteredChannels = filteredChannels.filter(ch => isFavorite(ch.id));
+            }
+
             currentPage = 0;
             channelCount.textContent = `${filteredChannels.length} canales`;
             renderChannels();
@@ -852,6 +898,8 @@
                 const safeName = escapeHtml(ch.name);
                 const safeCategory = escapeHtml(ch.category);
                 const safeLogo = escapeHtml(ch.logo);
+                const favActive = isFavorite(ch.id) ? ' active' : '';
+                const liveOkClass = signal === true ? ' live-ok' : '';
                 html += `
                     <div class="channel-item ${isActive} ${deadClass}" data-id="${ch.id}" data-channel='${JSON.stringify(ch).replace(/'/g,"&#39;")}'>
                         <img src="${safeLogo}" alt="${safeName}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Television_icon.svg/120px-Television_icon.svg.png'" />
@@ -859,7 +907,8 @@
                             <div class="name">${safeName}</div>
                             <div class="cat">${safeCategory}</div>
                         </div>
-                        <span class="live">${signal === false ? 'Sin señal' : 'Live'}</span>
+                        <span class="live${liveOkClass}">${signal === false ? 'Sin señal' : 'Live'}</span>
+                        <button class="btn-favorite${favActive}" title="Marcar como favorito">★</button>
                         <button class="btn-hide" title="Ocultar canal (no volverá a aparecer)">✕</button>
                     </div>
                 `;
@@ -887,6 +936,19 @@
                     const parent = this.closest('.channel-item');
                     const ch = JSON.parse(parent.dataset.channel);
                     hideChannel(ch);
+                });
+            });
+
+            document.querySelectorAll('.btn-favorite').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const parent = this.closest('.channel-item');
+                    const ch = JSON.parse(parent.dataset.channel);
+                    toggleFavorite(ch.id);
+                    this.classList.toggle('active', isFavorite(ch.id));
+                    if (onlyFav && !isFavorite(ch.id)) {
+                        applyCategoryFilter();
+                    }
                 });
             });
 
@@ -938,7 +1000,7 @@
                 videoPlayer.style.display = 'none';
                 iframePlayer.style.display = 'block';
                 iframePlayer.src = url;
-                return; // No se puede vigilar un iframe de terceros: sin watchdog aquí.
+                return;
             }
 
             videoPlayer.style.display = 'block';
@@ -979,7 +1041,7 @@
 
         function handleChannelFailure(channel) {
             clearWatchdog();
-            if (!currentChannel || currentChannel.id !== channel.id) return; // el usuario ya cambió de canal
+            if (!currentChannel || currentChannel.id !== channel.id) return;
 
             if (currentRetries < CONFIG.maxRetries) {
                 currentRetries++;
@@ -1000,6 +1062,7 @@
             el.classList.toggle('channel-dead', ok === false);
             const liveBadge = el.querySelector('.live');
             if (liveBadge) liveBadge.textContent = ok === false ? 'Sin señal' : 'Live';
+            if (liveBadge) liveBadge.classList.toggle('live-ok', ok === true);
         }
 
         function loadHLS(url) {
@@ -1023,9 +1086,6 @@
             document.head.appendChild(script);
         }
 
-        // ============================================================
-        // MODAL DE INFORMACIÓN (Acerca de / Privacidad / Contacto / Aviso Legal)
-        // ============================================================
         const infoBtn = document.getElementById('infoBtn');
         const infoOverlay = document.getElementById('infoOverlay');
         const infoCloseBtn = document.getElementById('infoCloseBtn');
@@ -1049,15 +1109,17 @@
             applyCategoryFilter();
         });
 
+        onlyFavToggle.addEventListener('change', function() {
+            onlyFav = this.checked;
+            applyCategoryFilter();
+        });
+
         restoreBtn.addEventListener('click', function() {
             if (confirm('¿Restaurar todos los canales ocultos?')) {
                 restoreAll();
             }
         });
 
-        // ============================================================
-        // BOTÓN DE INSTALACIÓN (FORZADO)
-        // ============================================================
         let deferredPrompt;
         const installBtn = document.getElementById('installBtn');
 
@@ -1081,13 +1143,13 @@
                     installBtn.style.display = 'none';
                 });
             } else {
-                // Si el evento no se disparó, mostrar mensaje
                 alert('⚠️ No se puede instalar. Asegúrate de usar Chrome y que la página sea HTTPS.');
             }
         });
 
         loadHidden();
         loadSignalStatus();
+        loadFavorites();
         countrySelector.value = 'mx';
         loadCountry('mx');
 
@@ -1101,7 +1163,6 @@
         console.log('📺 Teves con ocultar corregido y botón de instalación');
     </script>
     <script>
-    // Registrar el Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(() => console.log('✅ Service Worker registrado'))
