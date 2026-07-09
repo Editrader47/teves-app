@@ -1,5 +1,5 @@
 // Service Worker para Teves
-const CACHE_NAME = 'teves-v3';
+const CACHE_NAME = 'teves-v4';
 const urlsToCache = [
   './',
   './index.html',
@@ -33,8 +33,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
 
-  // HTML (navegación): red primero, para que las actualizaciones se vean sin reinstalar.
-  // Si no hay red, cae a la copia en caché (modo offline intacto).
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -48,7 +46,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Resto de recursos (íconos, manifest): caché primero, cambian poco.
   event.respondWith(
     caches.match(req).then(response => response || fetch(req))
   );
