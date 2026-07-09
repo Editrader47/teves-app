@@ -57,6 +57,16 @@
         .logo h1 span {
             color: #e50914;
         }
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+        }
+        .logo-by {
+            font-size: 8px;
+            font-weight: 400;
+            color: #888;
+        }
         .controls {
             display: flex;
             align-items: center;
@@ -461,7 +471,10 @@
     <header class="header">
         <div class="logo">
             <img class="logo-icon" src="mi_icono_192.png" alt="Teves" />
-            <h1>Te<span>ves</span></h1>
+            <div class="logo-text">
+                <h1>Te<span>ves</span></h1>
+                <span class="logo-by">by Adahia Software Pro</span>
+            </div>
         </div>
         <div class="controls">
             <span class="status-text" id="channelCount">Cargando...</span>
@@ -517,6 +530,8 @@
 
             <h2>Aviso Legal</h2>
             <p>Teves no aloja, produce ni almacena contenido audiovisual. Actúa únicamente como un catálogo que enlaza a fuentes públicas de terceros. Adahia Software Pro respeta los derechos de autor y atenderá cualquier solicitud justificada de retiro de un enlace a través del contacto indicado arriba.</p>
+
+            <p style="margin-top:14px;font-size:9px;color:#555;">© 2026 Adahia Software Pro. Todos los derechos reservados.</p>
         </div>
     </div>
 
