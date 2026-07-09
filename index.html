@@ -43,17 +43,12 @@
             align-items: center;
             gap: 6px;
         }
-        .logo-icon {
-            background: #e50914;
+       .logo-icon {
             width: 26px;
             height: 26px;
             border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 900;
-            color: #fff;
+            object-fit: cover;
+            flex-shrink: 0;
         }
         .logo h1 {
             font-size: 16px;
@@ -450,7 +445,7 @@
 
     <header class="header">
         <div class="logo">
-            <div class="logo-icon">T</div>
+            <img class="logo-icon" src="mi_icono_192.png" alt="Teves" />
             <h1>Te<span>ves</span></h1>
         </div>
         <div class="controls">
