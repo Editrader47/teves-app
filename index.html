@@ -453,15 +453,69 @@
             }
         }
         @media (max-width: 500px) {
-            .container {
+            .header {
                 flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+                padding: 8px 10px;
+            }
+            .logo {
+                justify-content: flex-start;
+            }
+            .controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+                align-items: center;
+            }
+            .status-text {
+                grid-column: 1 / -1;
+                text-align: center;
+                font-size: 10px;
+                padding: 2px 0;
+            }
+            .controls select {
+                max-width: none;
+                width: 100%;
+                font-size: 11px;
+                padding: 6px 6px;
+            }
+            .signal-toggle {
+                font-size: 10px;
+                justify-content: center;
+                background: #191924;
+                border: 1px solid #333;
+                border-radius: 4px;
+                padding: 5px 4px;
+            }
+            .btn-restore,
+            .btn-donate,
+            .btn-install {
+                width: 100%;
+                text-align: center;
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+            .badge {
+                display: none;
+            }
+            .btn-info {
+                grid-column: 1 / -1;
+                width: 100%;
+                padding: 5px;
+            }
+            .container {
+                flex-direction: column-reverse;
             }
             .sidebar {
                 width: 100%;
                 min-width: unset;
-                max-height: 130px;
+                max-height: 160px;
                 border-right: none;
-                border-bottom: 1px solid #222;
+                border-top: 1px solid #222;
+            }
+            .player-area {
+                min-height: 220px;
             }
         }
     </style>
@@ -890,6 +944,7 @@
             currentPage = 0;
             channelCount.textContent = `${filteredChannels.length} canales`;
             renderChannels();
+            verifyVisibleSignals();
         }
 
         function escapeHtml(str) {
@@ -976,6 +1031,7 @@
                 loadBtn.addEventListener('click', () => {
                     currentPage++;
                     renderChannels();
+                    verifyVisibleSignals();
                     sidebar.scrollTop = sidebar.scrollHeight * 0.7;
                 });
             }
@@ -1072,7 +1128,39 @@
                 setSignal(channel.id, false);
                 nowCat.textContent = '❌ Canal sin señal';
                 updateChannelBadge(channel.id, false);
+                if (onlySignal) applyCategoryFilter();
             }
+        }
+
+        function checkChannelReachable(channel, timeoutMs = 6000) {
+            return new Promise(resolve => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => { controller.abort(); resolve(false); }, timeoutMs);
+                fetch(channel.liveUrl, { method: 'GET', mode: 'no-cors', signal: controller.signal })
+                    .then(() => { clearTimeout(timer); resolve(true); })
+                    .catch(() => { clearTimeout(timer); resolve(false); });
+            });
+        }
+
+        function verifyVisibleSignals() {
+            if (!onlySignal) return;
+            const start = currentPage * CONFIG.itemsPerPage;
+            const end = start + CONFIG.itemsPerPage;
+            const toCheck = filteredChannels.slice(start, end).filter(ch => getSignal(ch.id) === null);
+
+            toCheck.forEach(ch => {
+                checkChannelReachable(ch).then(ok => {
+                    setSignal(ch.id, ok);
+                    if (!ok) {
+                        filteredChannels = filteredChannels.filter(c => c.id !== ch.id);
+                        channelCount.textContent = `${filteredChannels.length} canales`;
+                        const el = document.querySelector(`.channel-item[data-id="${ch.id}"]`);
+                        if (el) el.remove();
+                    } else {
+                        updateChannelBadge(ch.id, true);
+                    }
+                });
+            });
         }
 
         function updateChannelBadge(id, ok) {
