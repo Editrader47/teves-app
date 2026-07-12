@@ -733,13 +733,17 @@
         }
 
         function saveCache(key, data) {
-            try { localStorage.setItem('teves_' + key, JSON.stringify(data)); } catch (e) {}
+            try { localStorage.setItem('teves_' + key, JSON.stringify({ data, ts: Date.now() })); } catch (e) {}
         }
 
-        function getCache(key) {
+        function getCache(key, maxAgeHours = 24) {
             try {
-                const data = localStorage.getItem('teves_' + key);
-                return data ? JSON.parse(data) : null;
+                const raw = localStorage.getItem('teves_' + key);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed.ts !== 'number') return null;
+                if ((Date.now() - parsed.ts) / 3600000 > maxAgeHours) return null;
+                return parsed.data;
             } catch (e) { return null; }
         }
 
