@@ -93,7 +93,8 @@
         }
         .status-text {
             font-size: 9px;
-            color: #aaa;
+            color: #ffb020;
+            font-weight: 600;
         }
         .btn-restore {
             background: #333;
@@ -137,17 +138,18 @@
             background: #ff3333;
         }
         .btn-info {
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
+            background: #14b8a6;
+            color: #06251f;
+            border: 1px solid #0e8c7e;
             padding: 2px 8px;
             border-radius: 3px;
             font-size: 11px;
+            font-weight: 700;
             cursor: pointer;
             line-height: 1.4;
         }
         .btn-info:hover {
-            background: #555;
+            background: #1cd6c2;
         }
         .info-overlay {
             display: none;
@@ -490,19 +492,18 @@
             }
             .btn-restore,
             .btn-donate,
-            .btn-install {
+            .btn-install,
+            .btn-info {
                 width: 100%;
                 text-align: center;
                 padding: 6px 4px;
                 font-size: 11px;
             }
+            .btn-donate {
+                grid-column: 1 / -1;
+            }
             .badge {
                 display: none;
-            }
-            .btn-info {
-                grid-column: 1 / -1;
-                width: 100%;
-                padding: 5px;
             }
             .container {
                 flex-direction: column-reverse;
@@ -562,10 +563,10 @@
                 <input type="checkbox" id="onlyFavToggle" /> ⭐ Favoritos
             </label>
             <button class="btn-restore" id="restoreBtn">↩️ Restaurar ocultos</button>
+            <button class="btn-info" id="infoBtn" title="Acerca de, Privacidad, Contacto y Aviso Legal">ⓘ Acerca de</button>
             <a class="btn-donate" id="donateBtn" href="https://ko-fi.com/adahiapro" target="_blank" rel="noopener noreferrer">☕ Apóyanos</a>
             <button class="btn-install" id="installBtn">📲 Instalar App</button>
             <span class="badge">CAT</span>
-            <button class="btn-info" id="infoBtn" title="Acerca de, Privacidad, Contacto y Aviso Legal">ⓘ</button>
         </div>
     </header>
 
@@ -1132,14 +1133,94 @@
             }
         }
 
-        function checkChannelReachable(channel, timeoutMs = 6000) {
-            return new Promise(resolve => {
-                const controller = new AbortController();
-                const timer = setTimeout(() => { controller.abort(); resolve(false); }, timeoutMs);
-                fetch(channel.liveUrl, { method: 'GET', mode: 'no-cors', signal: controller.signal })
-                    .then(() => { clearTimeout(timer); resolve(true); })
-                    .catch(() => { clearTimeout(timer); resolve(false); });
+        let hlsLoaderPromise = null;
+        function ensureHlsLoaded() {
+            if (typeof Hls !== 'undefined') return Promise.resolve();
+            if (hlsLoaderPromise) return hlsLoaderPromise;
+            hlsLoaderPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js';
+                script.onload = () => resolve();
+                script.onerror = () => { hlsLoaderPromise = null; reject(new Error('hls load failed')); };
+                document.head.appendChild(script);
             });
+            return hlsLoaderPromise;
+        }
+
+        let probeContainer = null;
+        function getProbeContainer() {
+            if (!probeContainer) {
+                probeContainer = document.createElement('div');
+                probeContainer.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;';
+                document.body.appendChild(probeContainer);
+            }
+            return probeContainer;
+        }
+
+        function probeChannel(channel, timeoutMs = 7000) {
+            return new Promise(resolve => {
+                const url = channel.liveUrl;
+                if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+                    resolve(true);
+                    return;
+                }
+
+                let settled = false;
+                let hlsInstance = null;
+                const probeVideo = document.createElement('video');
+                probeVideo.muted = true;
+                probeVideo.preload = 'auto';
+                getProbeContainer().appendChild(probeVideo);
+
+                const timer = setTimeout(() => finish(false), timeoutMs);
+
+                function cleanup() {
+                    probeVideo.onerror = null;
+                    probeVideo.oncanplay = null;
+                    try { probeVideo.removeAttribute('src'); probeVideo.load(); } catch (e) {}
+                    if (probeVideo.parentNode) probeVideo.parentNode.removeChild(probeVideo);
+                    if (hlsInstance) { try { hlsInstance.destroy(); } catch (e) {} hlsInstance = null; }
+                }
+
+                function finish(ok) {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    cleanup();
+                    resolve(ok);
+                }
+
+                probeVideo.onerror = () => finish(false);
+                probeVideo.oncanplay = () => finish(true);
+
+                const isHls = url.includes('.m3u8') || url.includes('pluto.tv') || url.includes('akamaized') || url.includes('cdn');
+
+                if (isHls && !probeVideo.canPlayType('application/vnd.apple.mpegurl')) {
+                    ensureHlsLoaded().then(() => {
+                        if (settled) return;
+                        hlsInstance = new Hls();
+                        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                            if (data && data.fatal) finish(false);
+                        });
+                        hlsInstance.loadSource(url);
+                        hlsInstance.attachMedia(probeVideo);
+                    }).catch(() => finish(false));
+                } else {
+                    probeVideo.src = url;
+                }
+            });
+        }
+
+        async function runWithConcurrency(items, limit, worker) {
+            let idx = 0;
+            async function next() {
+                if (idx >= items.length) return;
+                const item = items[idx++];
+                await worker(item);
+                return next();
+            }
+            const runners = Array.from({ length: Math.min(limit, items.length) }, next);
+            await Promise.all(runners);
         }
 
         function verifyVisibleSignals() {
@@ -1148,18 +1229,17 @@
             const end = start + CONFIG.itemsPerPage;
             const toCheck = filteredChannels.slice(start, end).filter(ch => getSignal(ch.id) === null);
 
-            toCheck.forEach(ch => {
-                checkChannelReachable(ch).then(ok => {
-                    setSignal(ch.id, ok);
-                    if (!ok) {
-                        filteredChannels = filteredChannels.filter(c => c.id !== ch.id);
-                        channelCount.textContent = `${filteredChannels.length} canales`;
-                        const el = document.querySelector(`.channel-item[data-id="${ch.id}"]`);
-                        if (el) el.remove();
-                    } else {
-                        updateChannelBadge(ch.id, true);
-                    }
-                });
+            runWithConcurrency(toCheck, 4, async (ch) => {
+                const ok = await probeChannel(ch);
+                setSignal(ch.id, ok);
+                if (!ok) {
+                    filteredChannels = filteredChannels.filter(c => c.id !== ch.id);
+                    channelCount.textContent = `${filteredChannels.length} canales`;
+                    const el = document.querySelector(`.channel-item[data-id="${ch.id}"]`);
+                    if (el) el.remove();
+                } else {
+                    updateChannelBadge(ch.id, true);
+                }
             });
         }
 
